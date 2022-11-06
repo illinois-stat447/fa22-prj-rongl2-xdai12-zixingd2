@@ -5,7 +5,8 @@ Machine learning techniques have become increasingly popular and relevant to sol
 - Build four (tentative) text sentiment classifiers on Amazon Reviews dataset (BoW, Word2Vec, GloVe, fastText);
 - Re-apply the above four classifiers on different datasets;
 - Compare different classifiers on different datasets.
- 
+
+Data link: https://drive.google.com/drive/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M?resourcekey=0-TLwzfR2O-D2aPitmn5o9VQ
 
 ## Group Member & Peer Evaluation
 
