@@ -14,7 +14,7 @@ rongl2: Word2Vec, Drug review data cleaning and EDA, GloVe on Drug review data
 
 xdai12: GloVe, Bow and Word2Vec on Drug review data
 
-zixingd2: BoW,fastText on Amazon and Drug review data
+zixingd2: BoW and/or TF-IDF (if possible) on Amazon and Drug review data
 
 Comparision can be only a few words and some visualization
 
