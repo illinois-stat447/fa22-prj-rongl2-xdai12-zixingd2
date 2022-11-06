@@ -20,5 +20,5 @@ Comparision can be only a few words and some visualization
 
 Expected timeline:
 
-- By December 1 finish Amazon models
+- By Nov. 13, finish Amazon model
 - By December 12 finish Drug review models
