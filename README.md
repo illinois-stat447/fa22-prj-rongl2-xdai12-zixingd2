@@ -6,7 +6,7 @@ Machine learning techniques have become increasingly popular and relevant to sol
 - Re-apply the above four classifiers on different datasets (e.g. [Drug Reveiw dataset](https://archive.ics.uci.edu/ml/datasets/Drug+Review+Dataset+%28Drugs.com%29);
 - Compare different classifiers on same datasets; compare same classifier on different datasets
 
-[Amazon Data link](https://drive.google.com/drive/folders/1O2vakPXZ8upmG9G517ThehPsXFFnMSMY)
+[Amazon Data link](https://drive.google.com/drive/folders/14vWNcYX7ajd2YjPbf6Vi9cY35q3kq8ZE)
 
 ## Group Member & Peer Evaluation
 
