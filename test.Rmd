@@ -5,7 +5,7 @@ date: "2022-11-06"
 ---
 
 ```{r}
-#test1
+#test2
 df = read.csv("amazon_review_polarity_csv/train.csv", header = FALSE)
 ```
 
