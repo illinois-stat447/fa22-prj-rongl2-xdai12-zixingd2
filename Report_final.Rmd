@@ -21,7 +21,8 @@ reviews_text<-data.frame(reviews_text)
 
 ```{r}
 library(tidyr) 
-reviews_text<-separate(data = reviews_text, col = reviews_text, into = c("Sentiment", "SentimentText"), sep = 4)
+reviews_text<-separate(data = reviews_text, col = reviews_text, into = c("Sentiment", 
+                              "SentimentText"), sep = 4)
 ```
 
 ```{r}
@@ -30,32 +31,32 @@ reviews_text$Sentiment<-gsub("[^[:alnum:] ]","",reviews_text$Sentiment)
 # Retaining only alphanumeric values in the sentiment text
 reviews_text$SentimentText<-gsub("[^[:alnum:] ]"," ",reviews_text$SentimentText) 
 # Replacing multiple spaces in the text with single space
-reviews_text$SentimentText<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text$SentimentText, perl=TRUE) 
+reviews_text$SentimentText<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text$SentimentText, 
+                                 perl=TRUE) 
 # Writing the output to a file that can be consumed in other projects
 write.table(reviews_text,file = "Sentiment Analysis Dataset.csv",row.names = F,col.names = T,sep=',')
 ```
 
 ```{r}
-# reading the first 1000 reviews from the dataset
 reviews_text<-readLines('amazon_review_polarity_csv/train.csv', n = N)
-# basic EDA to confirm that the data is read correctly 
+# Basic EDA to confirm that the data is read correctly 
 print(class(reviews_text)) 
 print(length(reviews_text)) 
-print(head(reviews_text,2)) 
-# replacing the positive sentiment value 2 with __label__2
+# print(head(reviews_text,2)) 
+# Replacing the positive sentiment value 2 with __label__2
 reviews_text<-gsub("\\\"2\\\",","__label__2 ",reviews_text) 
-# replacing the negative sentiment value 1 with __label__1
+# Replacing the negative sentiment value 1 with __label__1
 reviews_text<-gsub("\\\"1\\\",","__label__1 ",reviews_text) 
-# removing the unnecessary \" characters 
+# Removing the unnecessary \" characters 
 reviews_text<-gsub("\\\""," ",reviews_text) 
-# replacing multiple spaces in the text with single space
+# Replacing multiple spaces in the text with single space
 reviews_text<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text, perl=TRUE) 
 # Basic EDA post the required processing to confirm input is as desired 
 print("EDA POST PROCESSING") 
 print(class(reviews_text)) 
 print(length(reviews_text)) 
-print(head(reviews_text,2)) 
-# writing the revamped file to the directory so we could use it with 
+# print(head(reviews_text,2)) 
+# Writing the revamped file to the directory so we could use it with 
 # fastText sentiment analyzer project
 fileConn<-file("Sentiment Analysis Dataset_ft.txt") 
 writeLines(reviews_text, fileConn) 
@@ -64,26 +65,24 @@ close(fileConn)
 
 ## BoW approach
 ```{r}
-# including the required libraries 
 library(SnowballC) 
 library(tm) 
-# setting the working directory where the text reviews dataset is located 
-# reading the transformed file as a dataframe 
+# Reading the transformed file as a dataframe 
 text <- read.table(file='Sentiment Analysis Dataset.csv', sep=',', header = TRUE) 
-# checking the dataframe to confirm everything is in tact 
+# Checking the dataframe to confirm everything is in tact 
 print(dim(text)) 
-# View(text)
 ```
 
 ```{r}
-# transforming the text into volatile corpus 
+# Transforming the text into volatile corpus 
 train_corp = VCorpus(VectorSource(text$SentimentText)) 
 print(train_corp)
 ```
 
 ```{r}
-# creating document term matrix 
-dtm_train <- DocumentTermMatrix(train_corp, control = list( tolower = TRUE,removeNumbers = TRUE, stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE )) 
+# Creating document term matrix 
+dtm_train <- DocumentTermMatrix(train_corp, control = list( tolower = TRUE, 
+   removeNumbers = TRUE, stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE )) 
 # Basic EDA on dtm 
 inspect(dtm_train)
 ```
@@ -95,7 +94,7 @@ inspect(dtm_train)
 ```
 
 ```{r}
-# splitting the train and test DTM 
+# Splitting the train and test DTM 
 dtm_train_train <- dtm_train[1:N_t, ] 
 dtm_train_test <- dtm_train[(N_t+1):N, ] 
 dtm_train_train_labels <- as.factor(as.character(text[1:N_t, ]$Sentiment)) 
@@ -103,33 +102,32 @@ dtm_train_test_labels <- as.factor(as.character(text[(N_t+1):N, ]$Sentiment))
 ```
 
 ```{r}
+# Convert the cell values with a non-zero value to Y, and in case of a zero convert it to N,
 cellconvert<- function(x) { x <- ifelse(x > 0, "Y", "N") }
 ```
 
 ```{r}
-# applying the function to rows in training and test datasets 
+# Applying the function to rows in training and test datasets 
 dtm_train_train <- apply(dtm_train_train, MARGIN = 2,cellconvert) 
 dtm_train_test <- apply(dtm_train_test, MARGIN = 2,cellconvert) 
-# inspecting the train dtm to confirm all is in tact 
-# View(dtm_train_train)
 ```
 
-### training model
+### Training model
 ```{r}
-# training the naive bayes classifier on the training dtm 
+# Training the naive bayes classifier on the training dtm 
 library(e1071) 
 nb_senti_classifier=naiveBayes(dtm_train_train,dtm_train_train_labels) 
-# printing the summary of the model created 
+# Printing the summary of the model created 
 summary(nb_senti_classifier)
 ```
 
 ```{r}
-# making predictions on the test data dtm 
+# Making predictions on the test data dtm 
 nb_predicts <- predict(nb_senti_classifier, dtm_train_test,type="class") 
 ```
 
 ```{r}
-# computing accuracy of the model 
+# Computing accuracy of the model 
 library(rminer) 
 print(mmetric(nb_predicts, dtm_train_test_labels, c("ACC")))
 ```
@@ -137,43 +135,38 @@ print(mmetric(nb_predicts, dtm_train_test_labels, c("ACC")))
 
 ### pretrained word2vec word embedding
 ```{r}
-# including the required library 
-# install.packages("https://cran.r-project.org/src/contrib/Archive/softmaxreg/softmaxreg_1.2.tar.gz",repos = NULL, type = "source")
+# Including the required library 
 library(softmaxreg) 
-# importing the word2vec pretrained vector into memory 
+# Importing the word2vec pretrained vector into memory 
 data(word2vec)
-# View(word2vec)
 dim(word2vec)
 ```
 
 ```{r}
-# function to get word vector for each review 
+# Function to get word vector for each review 
 docVectors = function(x) { wordEmbed(x, word2vec, meanVec = TRUE) } 
 text = read.csv(file='Sentiment Analysis Dataset.csv', header = TRUE) 
-# applying the docVector function on each of the reviews 
-# storing the matrix of word vectors as temp 
+# Applying the docVector function on each of the reviews 
+# Storing the matrix of word vectors as temp 
 temp=t(sapply(text$SentimentText, docVectors)) 
-# visualizing the word vectors output 
-# View(temp)
 dim(temp)
 ```
 
 ```{r}
-# splitting the dataset into train and test 
+# Splitting the dataset into train and test 
 temp_train=temp[1:N_t,] 
 temp_test=temp[(N_t+1):N,] 
 labels_train=as.factor(as.character(text[1:N_t,]$Sentiment)) 
 labels_test=as.factor(as.character(text[(N_t+1):N,]$Sentiment)) 
-# including the random forest library 
 library(randomForest) 
-# training a model using random forest classifier with training dataset 
-# observe that we are using 20 trees to create the model 
+# Training a model using random forest classifier with training dataset 
+# Observe that we are using 20 trees to create the model 
 rf_senti_classifier=randomForest(temp_train, labels_train,ntree=20) 
 print(rf_senti_classifier)
 ```
 
 ```{r}
-# making predictions on the dataset 
+# Making predictions on the dataset 
 rf_predicts<-predict(rf_senti_classifier, temp_test) 
 library(rminer) 
 print(mmetric(rf_predicts, labels_test, c("ACC")))
@@ -181,111 +174,98 @@ print(mmetric(rf_predicts, labels_test, c("ACC")))
 
 ### GloVe word embedding
 ```{r}
-# including the required library 
+# Including the required library 
 library(text2vec) 
-# reading the dataset 
+# Reading the dataset 
 text = read.csv(file='Sentiment Analysis Dataset.csv', header = TRUE) 
-# subsetting only the review text so as to create Glove word embedding 
+# Subsetting only the review text so as to create Glove word embedding 
 wiki = as.character(text$SentimentText) 
 # Create iterator over tokens 
 tokens = space_tokenizer(wiki) 
 # Create vocabulary. Terms will be unigrams (simple words). 
 it = itoken(tokens, progressbar = FALSE) 
 vocab = create_vocabulary(it) 
-# consider a term in the vocabulary if and only if the term has appeared at least three times in the dataset 
+# Consider a term in the vocabulary if and only if the term has appeared at least 
+# three times in the dataset 
 vocab = prune_vocabulary(vocab, term_count_min = 3L) 
 # Use the filtered vocabulary
 vectorizer = vocab_vectorizer(vocab) 
-# use window of 5 for context words and create a term co-occurance matrix 
+# Use window of 5 for context words and create a term co-occurance matrix 
 tcm = create_tcm(it, vectorizer, skip_grams_window = 5L) 
-# create the glove embedding for each in the vocab and 
+# Create the glove embedding for each in the vocab and 
 # the dimension of the word embedding should set to 50 
-# x_max is the maximum number of co-occurrences to use in the weighting 
-# function 
-# note that training the word embedding is time consuming - be patient 
+# x_max is the maximum number of co-occurrences to use in the weighting function 
 glove = GlobalVectors$new(rank = 50, x_max = 100)
 wv_main = glove$fit_transform(tcm, n_iter = 10, convergence_tol = 0.01)
 ```
 
 ```{r}
 # Glove model learns two sets of word vectors - main and context. 
-# both matrices may be added to get the combined word vector 
+# Both matrices may be added to get the combined word vector 
 wv_context = glove$components 
 word_vectors = wv_main + t(wv_context) 
-# converting the word_vector to a dataframe for visualization 
-word_vectors=data.frame(word_vectors) 
-# the word for each embedding is set as row name by default 
-# using the tibble library rownames_to_column function, the rownames is copied as first column of the dataframe 
-# we also name the first column of the dataframe as words 
+# Converting the word_vector to a dataframe for visualization 
+word_vectors = data.frame(word_vectors) 
+# The word for each embedding is set as row name by default 
+# Using the tibble library rownames_to_column function, the rownames is copied 
+# as first column of the dataframe 
+# We also name the first column of the dataframe as words 
 library(tibble) 
 word_vectors=rownames_to_column(word_vectors, var = "words") 
-# View(word_vectors)
 ```
 
 ```{r}
 library(softmaxreg) 
 docVectors = function(x) { wordEmbed(x, word_vectors, meanVec = TRUE) } 
-# applying the function docVectors function on the entire reviews dataset 
-# this will result in word embedding representation of the entire reviews 
-# dataset 
-temp=t(sapply(text$SentimentText, docVectors)) 
-# View(temp)
+# Applying the function docVectors function on the entire reviews dataset 
+# This will result in word embedding representation of the entire reviews dataset 
+temp = t(sapply(text$SentimentText, docVectors)) 
 ```
 
 ```{r}
-# splitting the dataset into train and test portions 
+# Splitting the dataset into train and test portions 
 temp_train=temp[1:N_t,] 
 temp_test=temp[(N_t+1):N,] 
 labels_train=as.factor(as.character(text[1:N_t,]$Sentiment)) 
 labels_test=as.factor(as.character(text[(N_t+1):N,]$Sentiment)) 
-# using randomforest to build a model on train data library(randomForest)
+# Using randomforest to build a model on train data 
+library(randomForest)
 rf_senti_classifier=randomForest(temp_train, labels_train,ntree=20) 
 print(rf_senti_classifier)
 ```
 
 ```{r}
-# predicting labels using the randomforest model created 
+# Predicting labels using the randomforest model created 
 rf_predicts<-predict(rf_senti_classifier, temp_test) 
-# estimating the accuracy from the predictions 
+# Estimating the accuracy from the predictions 
 library(rminer) 
 print(mmetric(rf_predicts, labels_test, c("ACC")))
 ```
 
 ### fastText word embedding
 ```{r}
-# loading the required libary 
 library(fastTextR) 
-# reading the input reviews file 
-# recollect that fastText needs the file in a specific format and we created one compatiable file in 
-# "Understanding the Amazon Reviews Dataset" section of this chapter
+# Input reviews file 
 text = readLines("Sentiment Analysis Dataset_ft.txt") 
-# Viewing the text vector for conformation 
-# View(text)
 ```
 
 ```{r}
-# dividing the reviews into training and test 
+# Dividing the reviews into training and test 
 temp_train=text[1:N_t]
 temp_test=text[(N_t+1):N] 
-# Viewing the train datasets for confirmation 
-# View(temp_train)
 ```
 
 ```{r}
-# creating txt file for train and test dataset 
-# the fasttext function expects files to be passed for training and testing 
+# Creating txt file for train and test dataset 
 fileConn<-file("train.ft.txt") 
 writeLines(temp_train, fileConn) 
 close(fileConn) 
 fileConn<-file("test.ft.txt") 
 writeLines(temp_test, fileConn) 
 close(fileConn) 
-# creating a test file with no labels 
-# recollect the original test dataset has labels in it 
-# as the dataset is just a subset obtained from full dataset 
+# Creating a test file with no labels 
 temp_test_nolabel<- gsub("__label__1", "", temp_test, perl=TRUE) 
 temp_test_nolabel<- gsub("__label__2", "", temp_test_nolabel, perl=TRUE)
-# View(temp_test_nolabel)
 ```
 
 ```{r}
@@ -294,33 +274,28 @@ writeLines(temp_test_nolabel, fileConn)
 close(fileConn) 
 # training a supervised classification model with training dataset file 
 model<-ft_train("train.ft.txt", method = "supervised", control = ft_control(nthreads = 3L, seed = 1)) 
-# Obtain all the words from a previously trained model= 
+# Obtain all the words from a previously trained model
 words<-ft_words(model) 
-# viewing the words for confirmation. These are the set of words present in our training data 
-# View(words)
 ```
 
 ```{r}
 # Obtain word vectors from a previously trained model. 
 word_vec<-ft_word_vectors(model, words) 
-# Viewing the word vectors for each word in our training dataset
-# observe that the word embedding dimension is 5 
-# View(word_vec)
 ```
 
 ```{r}
-# predicting the labels for the reviews in the no labels test dataset 
-# getting the predictions into a dataframe so as to compute performance measurement
+# Predicting the labels for the reviews in the no labels test dataset 
+# Getting the predictions into a dataframe so as to compute performance measurement
 ft_preds<-ft_predict(model, newdata = temp_test_nolabel) 
-# reading the test file to extract the actual labels 
+# Reading the test file to extract the actual labels 
 reviewstestfile<- readLines("test.ft.txt") 
-# extracting just the labels frm each line 
+# Extracting just the labels frm each line 
 library(stringi) 
 actlabels<-stri_extract_first(reviewstestfile, regex="\\w+") 
-# converting the actual labels and predicted labels into factors 
+# Converting the actual labels and predicted labels into factors 
 actlabels<-as.factor(as.character(actlabels)) 
 ft_preds<-as.factor(as.character(ft_preds$label)) 
-# getting the estimate of the accuracy 
+# Getting the estimate of the accuracy 
 library(rminer) 
 print(mmetric(actlabels, ft_preds, c("ACC")))
 ```
