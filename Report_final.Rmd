@@ -438,7 +438,6 @@ dtm_train_train_Drug <- apply(dtm_train_train_Drug, MARGIN = 2,cellconvert)
 dtm_train_test_Drug <- apply(dtm_train_test_Drug, MARGIN = 2,cellconvert) 
 ```
 
-### Training model
 ```{r}
 # Training the naive bayes classifier on the training dtm 
 library(e1071) 
@@ -459,7 +458,7 @@ print(mmetric(nb_predicts_Drug, dtm_train_test_Drug_labels, c("ACC")))
 ```
 
 
-### Pretrained word2vec word embedding
+## Pretrained word2vec word embedding
 ```{r}
 library(softmaxreg) 
 # Importing the word2vec pretrained vector into memory 
@@ -497,7 +496,7 @@ library(rminer)
 print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 ```
 
-### GloVe word embedding
+## GloVe word embedding
 ```{r}
 library(text2vec) 
 # Reading the dataset 
@@ -566,7 +565,7 @@ library(rminer)
 print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 ```
 
-### FastText word embedding
+## FastText word embedding
 ```{r}
 library(fastTextR) 
 # Input reviews file 
