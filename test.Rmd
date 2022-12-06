@@ -96,9 +96,9 @@ inspect(dtm_train)
 ```{r}
 # splitting the train and test DTM 
 dtm_train_train <- dtm_train[1:N_t, ] 
-dtm_train_test <- dtm_train[N_t+1:N, ] 
+dtm_train_test <- dtm_train[(N_t+1):N, ] 
 dtm_train_train_labels <- as.factor(as.character(text[1:N_t, ]$Sentiment)) 
-dtm_train_test_labels <- as.factor(as.character(text[N_t+1:N, ]$Sentiment))
+dtm_train_test_labels <- as.factor(as.character(text[(N_t+1):N, ]$Sentiment))
 ```
 
 ```{r}
@@ -162,9 +162,9 @@ dim(temp)
 ```{r}
 # splitting the dataset into train and test 
 temp_train=temp[1:N_t,] 
-temp_test=temp[N_t+1:N,] 
+temp_test=temp[(N_t+1):N,] 
 labels_train=as.factor(as.character(text[1:N_t,]$Sentiment)) 
-labels_test=as.factor(as.character(text[N_t+1:N,]$Sentiment)) 
+labels_test=as.factor(as.character(text[(N_t+1):N,]$Sentiment)) 
 # including the random forest library 
 library(randomForest) 
 # training a model using random forest classifier with training dataset 
@@ -236,9 +236,9 @@ temp=t(sapply(text$SentimentText, docVectors))
 ```{r}
 # splitting the dataset into train and test portions 
 temp_train=temp[1:N_t,] 
-temp_test=temp[N_t+1:N,] 
+temp_test=temp[(N_t+1):N,] 
 labels_train=as.factor(as.character(text[1:N_t,]$Sentiment)) 
-labels_test=as.factor(as.character(text[N_t+1:N,]$Sentiment)) 
+labels_test=as.factor(as.character(text[(N_t+1):N,]$Sentiment)) 
 # using randomforest to build a model on train data library(randomForest)
 rf_senti_classifier=randomForest(temp_train, labels_train,ntree=20) 
 print(rf_senti_classifier)
@@ -267,7 +267,7 @@ text = readLines("Sentiment Analysis Dataset_ft.txt")
 ```{r}
 # dividing the reviews into training and test 
 temp_train=text[1:N_t]
-temp_test=text[N_t+1:N] 
+temp_test=text[(N_t+1):N] 
 # Viewing the train datasets for confirmation 
 # View(temp_train)
 ```
@@ -414,9 +414,9 @@ inspect(dtm_train_Drug)
 ```{r}
 # splitting the train and test DTM 
 dtm_train_train_Drug <- dtm_train_Drug[1:N_t_Drug, ] 
-dtm_train_test_Drug <- dtm_train_Drug[N_t_Drug+1:N_Drug, ] 
+dtm_train_test_Drug <- dtm_train_Drug[(N_t_Drug+1):N_Drug, ] 
 dtm_train_train_Drug_labels <- as.factor(as.character(text_Drug[1:N_t_Drug, ]$Sentiment)) 
-dtm_train_test_Drug_labels <- as.factor(as.character(text_Drug[N_t_Drug+1:N_Drug, ]$Sentiment))
+dtm_train_test_Drug_labels <- as.factor(as.character(text_Drug[(N_t_Drug+1):N_Drug, ]$Sentiment))
 ```
 
 ```{r}
@@ -480,9 +480,9 @@ dim(temp_Drug)
 ```{r}
 # splitting the dataset into train and test 
 temp_train_Drug=temp_Drug[1:N_t_Drug,] 
-temp_test_Drug=temp_Drug[N_t_Drug+1:N_Drug,] 
+temp_test_Drug=temp_Drug[(N_t_Drug+1):N_Drug,] 
 labels_train_Drug=as.factor(as.character(text_Drug[1:N_t_Drug,]$Sentiment)) 
-labels_test_Drug=as.factor(as.character(text_Drug[N_t_Drug+1:N_Drug,]$Sentiment)) 
+labels_test_Drug=as.factor(as.character(text_Drug[(N_t_Drug+1):N_Drug,]$Sentiment)) 
 # including the random forest library 
 library(randomForest) 
 # training a model using random forest classifier with training dataset 
@@ -554,9 +554,9 @@ temp_Drug=t(sapply(text_Drug$SentimentText, docVectors_Drug))
 ```{r}
 # splitting the dataset into train and test portions 
 temp_train_Drug=temp_Drug[1:N_t_Drug,] 
-temp_test_Drug=temp_Drug[N_t_Drug+1:N_Drug,] 
+temp_test_Drug=temp_Drug[(N_t_Drug+1):N_Drug,] 
 labels_train_Drug=as.factor(as.character(text_Drug[1:N_t_Drug,]$Sentiment)) 
-labels_test_Drug=as.factor(as.character(text_Drug[N_t_Drug+1:N_Drug,]$Sentiment)) 
+labels_test_Drug=as.factor(as.character(text_Drug[(N_t_Drug+1):N_Drug,]$Sentiment)) 
 # using randomforest to build a model on train data library(randomForest)
 rf_senti_classifier_Drug=randomForest(temp_train_Drug, labels_train_Drug,ntree=20) 
 print(rf_senti_classifier_Drug)
@@ -585,7 +585,7 @@ text_Drug = readLines("Sentiment Analysis Dataset_ft_Drug.txt")
 ```{r}
 # dividing the reviews into training and test 
 temp_train_Drug=text_Drug[1:N_t_Drug]
-temp_test_Drug=text_Drug[N_t_Drug+1:N_Drug] 
+temp_test_Drug=text_Drug[(N_t_Drug+1):N_Drug] 
 # Viewing the train datasets for confirmation 
 # View(temp_train)
 ```
