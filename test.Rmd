@@ -339,6 +339,7 @@ reviews_text_Drug<-data.frame(reviews_text_Drug)
 library(tidyr) 
 reviews_text_Drug<-separate(data = reviews_text_Drug, col = reviews_text_Drug, into = c("Sentiment", "SentimentText"), sep = 4)
 reviews_text_Drug<-reviews_text_Drug[-1,]
+N_Drug = N_Drug - 1
 ```
 
 ```{r}
@@ -415,6 +416,7 @@ inspect(dtm_train_Drug)
 # splitting the train and test DTM 
 dtm_train_train_Drug <- dtm_train_Drug[1:N_t_Drug, ] 
 dtm_train_test_Drug <- dtm_train_Drug[(N_t_Drug+1):N_Drug, ] 
+dim(dtm_train_Drug)
 dtm_train_train_Drug_labels <- as.factor(as.character(text_Drug[1:N_t_Drug, ]$Sentiment)) 
 dtm_train_test_Drug_labels <- as.factor(as.character(text_Drug[(N_t_Drug+1):N_Drug, ]$Sentiment))
 ```
