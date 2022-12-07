@@ -12,12 +12,8 @@ output:
 \tableofcontents 
 \newpage
 
-```{r}
-#test4
-# df = read.csv("amazon_review_polarity_csv/train.csv", header = FALSE)
-```
-
-# Amazon reviews
+# Data Prepossessing
+## Amazon reviews
 ```{r}
 set.seed(1)
 N <- 100000
@@ -71,7 +67,89 @@ writeLines(reviews_text, fileConn)
 close(fileConn)
 ```
 
-## BoW approach
+
+
+## Drug Data
+```{r, echo=FALSE}
+N_Drug <- 146942
+reviews_text_Drug <- readLines("Drug Train.csv", n = N_Drug)
+reviews_text_Drug <- data.frame(reviews_text_Drug)
+```
+
+```{r, echo=FALSE}
+reviews_text_Drug <- separate(data = reviews_text_Drug, col = reviews_text_Drug, 
+                            into = c("Sentiment", "SentimentText"), sep = 4)
+reviews_text_Drug <- reviews_text_Drug[-1,]
+N_Drug <- N_Drug - 1
+```
+
+```{r, echo=FALSE}
+# Retaining only alphanumeric values in the sentiment column
+reviews_text_Drug$Sentiment <- gsub("[^[:alnum:] ]","",reviews_text_Drug$Sentiment) 
+# Retaining only alphanumeric values in the sentiment text
+reviews_text_Drug$SentimentText <- gsub("[^[:alnum:] ]"," ",reviews_text_Drug$SentimentText) 
+# Replacing multiple spaces in the text with single space
+reviews_text_Drug$SentimentText <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", 
+                                      reviews_text_Drug$SentimentText, perl=TRUE)
+```
+
+
+```{r}
+# Checking the summary of our label for Drug data
+(Sentimentable = table(reviews_text_Drug$Sentiment))
+# Balance our Drug data
+minlabel <- names(which(Sentimentable == min(Sentimentable)))
+maxlabel <- names(which(Sentimentable == max(Sentimentable)))
+
+n_maxlabel <- min(Sentimentable)
+minlabelid <- c(1:N_Drug)[reviews_text_Drug$Sentiment==minlabel]
+maxlabelid <- sample(c(1:N_Drug)[reviews_text_Drug$Sentiment==maxlabel],n_maxlabel)
+balanceid <- sample(c(minlabelid,maxlabelid))
+reviews_text_Drug <- reviews_text_Drug[balanceid,]
+
+N_Drug <- nrow(reviews_text_Drug)
+N_train_Drug <- round(0.8*N_Drug)
+```
+
+
+```{r, echo=FALSE}
+# Writing the output to a file that can be consumed in other projects
+write.table(reviews_text_Drug,file = "Sentiment Analysis Dataset_Drug.csv",
+            row.names = F, col.names = T,sep=',')
+```
+
+```{r, echo=FALSE}
+reviews_text_Drug <- readLines("Drug Train.csv", n = 146942)
+reviews_text_Drug <- reviews_text_Drug[-1]
+reviews_text_Drug <- reviews_text_Drug[balanceid]
+# Basic EDA to confirm that the data is read correctly 
+print(class(reviews_text_Drug)) 
+print(length(reviews_text_Drug)) 
+# print(head(reviews_text_Drug,2)) 
+# Replacing the positive sentiment value 2 with __label__2
+reviews_text_Drug<-gsub("\\\"2\\\",","__label__2 ",reviews_text_Drug) 
+# Replacing the negative sentiment value 1 with __label__1
+reviews_text_Drug<-gsub("\\\"1\\\",","__label__1 ",reviews_text_Drug) 
+# Removing the unnecessary \" characters 
+reviews_text_Drug<-gsub("\\\""," ",reviews_text_Drug) 
+# Replacing multiple spaces in the text with single space
+reviews_text_Drug<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text_Drug, perl=TRUE) 
+# Basic EDA post the required processing to confirm input is as desired 
+print("EDA POST PROCESSING") 
+print(class(reviews_text_Drug)) 
+print(length(reviews_text_Drug)) 
+# print(head(reviews_text_Drug,2)) 
+# Writing the revamped file to the directory so we could use it with 
+# fastText sentiment analyzer project
+fileConn<-file("Sentiment Analysis Dataset_ft_Drug.txt") 
+writeLines(reviews_text_Drug, fileConn) 
+close(fileConn)
+```
+
+
+
+# BoW approach
+## Amazon reviews
 ```{r}
 library(SnowballC) 
 library(tm) 
@@ -100,6 +178,62 @@ inspect(dtm_train)
 dtm_train = removeSparseTerms(dtm_train, 0.99) 
 inspect(dtm_train)
 ```
+
+
+
+```{r}
+# Word Cloud preparing
+v.size = dim(dtm_train)[2]
+ytrain = as.numeric(text$Sentiment)
+```
+
+```{r}
+# Using two-sample t-test to find the most different word to show our Word Cloud
+library(slam)
+summ = matrix(0, nrow=v.size, ncol=4)
+summ[,1] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==2, ]), mean)
+summ[,2] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==2, ]), var)
+summ[,3] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==1, ]), mean)
+summ[,4] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train[ytrain==1, ]), var)
+
+n1 = sum((ytrain)-1); 
+n = length(ytrain)
+n0 = n - n1
+
+myp = (summ[,1] - summ[,3])/
+  sqrt(summ[,2]/n1 + summ[,4]/n0)
+```
+
+```{r}
+words = colnames(dtm_train)
+id = order(abs(myp), decreasing=TRUE)
+pos.list = words[id[myp[id]>0]]
+posvalue = myp[id][myp[id]>0][1:50]
+neg.list = words[id[myp[id]<0]]
+negvalue = myp[id][myp[id]<0][1:50]
+```
+
+
+```{r}
+# Word Cloud for positive words
+library(wordcloud)
+wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(4,.5), min.freq = 5, 
+          random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+```
+
+```{r}
+# Word Cloud for negative words
+wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(3,.5), min.freq = 5, 
+          random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+```
+
+
+
+
 
 ```{r}
 # Splitting the train and test DTM 
@@ -140,7 +274,130 @@ print(mmetric(nb_predicts, dtm_train_test_labels, c("ACC")))
 ```
 
 
-## Pretrained word2vec word embedding
+
+## Drug Data
+```{r, echo=FALSE}
+library(SnowballC) 
+library(tm) 
+# Reading the transformed file as a dataframe 
+text_Drug <- read.table(file='Sentiment Analysis Dataset_Drug.csv', sep=',', header = TRUE) 
+# Checking the dataframe to confirm everything is in tact 
+print(dim(text_Drug)) 
+```
+
+```{r, echo=FALSE}
+# Transforming the text into volatile corpus 
+train_corp_Drug <- VCorpus(VectorSource(text_Drug$SentimentText)) 
+print(train_corp_Drug)
+```
+
+```{r, echo=FALSE}
+# Creating document term matrix 
+dtm_train_Drug <- DocumentTermMatrix(train_corp_Drug, control = 
+                                       list(tolower = TRUE, removeNumbers = TRUE, stopwords = TRUE, 
+                                             removePunctuation = TRUE, stemming = TRUE)) 
+# Basic EDA on dtm 
+inspect(dtm_train_Drug)
+```
+
+```{r, echo=FALSE}
+# Removing sparse terms 
+dtm_train_Drug <- removeSparseTerms(dtm_train_Drug, 0.99) 
+inspect(dtm_train_Drug)
+```
+
+```{r, echo=FALSE}
+# Word Cloud preparing
+v.size = dim(dtm_train_Drug)[2]
+ytrain = as.numeric(text_Drug$Sentiment)
+```
+
+```{r, echo=FALSE}
+# Using two-sample t-test to find the most different word to show our Word Cloud
+library(slam)
+summ = matrix(0, nrow=v.size, ncol=4)
+summ[,1] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train_Drug[ytrain==2, ]), mean)
+summ[,2] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train_Drug[ytrain==2, ]), var)
+summ[,3] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train_Drug[ytrain==1, ]), mean)
+summ[,4] = colapply_simple_triplet_matrix(
+  as.simple_triplet_matrix(dtm_train_Drug[ytrain==1, ]), var)
+
+n1 = sum((ytrain)-1); 
+n = length(ytrain)
+n0 = n - n1
+
+myp = (summ[,1] - summ[,3])/
+  sqrt(summ[,2]/n1 + summ[,4]/n0)
+```
+
+```{r, echo=FALSE}
+words = colnames(dtm_train_Drug)
+id = order(abs(myp), decreasing=TRUE)
+pos.list = words[id[myp[id]>0]]
+posvalue = myp[id][myp[id]>0][1:50]
+neg.list = words[id[myp[id]<0]]
+negvalue = myp[id][myp[id]<0][1:50]
+```
+
+
+```{r, echo=FALSE}
+# Word Cloud for positive words
+library(wordcloud)
+wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(3,.5), min.freq = 5, 
+          random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+```
+
+
+```{r, echo=FALSE}
+# Word Cloud for negative words
+wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(3,.5), min.freq = 5, 
+          random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+```
+
+```{r, echo=FALSE}
+# Splitting the train and test DTM 
+dtm_train_train_Drug <- dtm_train_Drug[1:N_train_Drug, ] 
+dtm_train_test_Drug <- dtm_train_Drug[(N_train_Drug+1):N_Drug, ] 
+dtm_train_train_Drug_labels <- as.factor(as.character(text_Drug[1:N_train_Drug, ]$Sentiment)) 
+dtm_train_test_Drug_labels <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug, ]$Sentiment))
+```
+
+```{r, echo=FALSE}
+# Convert the cell values with a non-zero value to Y, and in case of a zero we convert it to N
+cellconvert <- function(x) { x <- ifelse(x > 0, "Y", "N") }
+```
+
+```{r, echo=FALSE}
+# Applying the function to rows in training and test datasets 
+dtm_train_train_Drug <- apply(dtm_train_train_Drug, MARGIN = 2,cellconvert) 
+dtm_train_test_Drug <- apply(dtm_train_test_Drug, MARGIN = 2,cellconvert) 
+```
+
+```{r, echo=FALSE}
+# Training the naive bayes classifier on the training dtm 
+library(e1071) 
+nb_senti_classifier_Drug <- naiveBayes(dtm_train_train_Drug, dtm_train_train_Drug_labels) 
+# Printing the summary of the model created 
+summary(nb_senti_classifier_Drug)
+```
+
+```{r, echo=FALSE}
+# Making predictions on the test data dtm 
+nb_predicts_Drug <- predict(nb_senti_classifier_Drug, dtm_train_test_Drug, type="class") 
+```
+
+```{r, echo=FALSE}
+# Computing accuracy of the model 
+library(rminer) 
+print(mmetric(nb_predicts_Drug, dtm_train_test_Drug_labels, c("ACC")))
+```
+
+
+# Pretrained word2vec word embedding
+## Amazon reviews
 ```{r}
 library(softmaxreg) 
 # Importing the word2vec pretrained vector into memory 
@@ -177,8 +434,48 @@ rf_predicts <- predict(rf_senti_classifier, temp_test)
 library(rminer) 
 print(mmetric(rf_predicts, labels_test, c("ACC")))
 ```
+## Drug Data
 
-## GloVe word embedding
+```{r, echo=FALSE}
+library(softmaxreg) 
+# Importing the word2vec pretrained vector into memory 
+data(word2vec)
+dim(word2vec)
+```
+
+```{r, echo=FALSE}
+# Function to get word vector for each review 
+docVectors = function(x) { wordEmbed(x, word2vec, meanVec = TRUE) } 
+text_Drug <- read.csv(file='Sentiment Analysis Dataset_Drug.csv', header = TRUE) 
+# Applying the docVector function on each of the reviews 
+# Storing the matrix of word vectors as temp 
+temp_Drug <- t(sapply(text_Drug$SentimentText, docVectors)) 
+dim(temp_Drug)
+```
+
+```{r, echo=FALSE}
+# Splitting the dataset into train and test 
+temp_train_Drug <- temp_Drug[1:N_train_Drug,] 
+temp_test_Drug <- temp_Drug[(N_train_Drug+1):N_Drug,] 
+labels_train_Drug <- as.factor(as.character(text_Drug[1:N_train_Drug,]$Sentiment)) 
+labels_test_Drug <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug,]$Sentiment)) 
+library(randomForest) 
+# Training a model using random forest classifier with training dataset 
+# Observe that we are using 20 trees to create the model 
+rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntree=20) 
+print(rf_senti_classifier_Drug)
+```
+
+```{r, echo=FALSE}
+# Making predictions on the dataset 
+rf_predicts_Drug <- predict(rf_senti_classifier_Drug, temp_test_Drug) 
+library(rminer) 
+print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
+```
+
+
+# GloVe word embedding
+## Amazon reviews
 ```{r}
 # Including the required library 
 library(text2vec) 
@@ -248,7 +545,77 @@ library(rminer)
 print(mmetric(rf_predicts, labels_test, c("ACC")))
 ```
 
-## FastText word embedding
+## Drug Data
+```{r, echo=FALSE}
+library(text2vec) 
+# Reading the dataset 
+text_Drug <- read.csv(file='Sentiment Analysis Dataset_Drug.csv', header = TRUE) 
+# Subsetting only the review text so as to create Glove word embedding 
+wiki_Drug <- as.character(text_Drug$SentimentText) 
+# Create iterator over tokens 
+tokens_Drug <- space_tokenizer(wiki_Drug) 
+# Create vocabulary. Terms will be unigrams (simple words). 
+it_Drug <- itoken(tokens_Drug, progressbar = FALSE) 
+vocab_Drug <- create_vocabulary(it_Drug) 
+# Consider a term in the vocabulary if and only if the term has appeared at least 
+# three times in the dataset 
+vocab_Drug <- prune_vocabulary(vocab_Drug, term_count_min = 3L) 
+# Use the filtered vocabulary
+vectorizer_Drug <- vocab_vectorizer(vocab_Drug) 
+# Use window of 5 for context words and create a term co-occurance matrix 
+tcm_Drug <- create_tcm(it_Drug, vectorizer_Drug, skip_grams_window = 5L) 
+# Create the glove embedding for each in the vocab and 
+# the dimension of the word embedding should set to 50 
+# x_max is the maximum number of co-occurrences to use in the weighting function 
+glove <- GlobalVectors$new(rank = 50, x_max = 100)
+wv_main_Drug <- glove$fit_transform(tcm_Drug, n_iter = 10, convergence_tol = 0.01)
+```
+
+```{r, echo=FALSE}
+# Glove model learns two sets of word vectors - main and context
+# Both matrices may be added to get the combined word vector 
+wv_context <- glove$components 
+word_vectors_Drug <- wv_main_Drug + t(wv_context) 
+# Converting the word_vector to a dataframe for visualization 
+word_vectors_Drug <- data.frame(word_vectors_Drug) 
+# The word for each embedding is set as row name by default 
+# Using the tibble library rownames_to_column function, the rownames is copied 
+# as first column of the dataframe 
+# We also name the first column of the dataframe as words 
+library(tibble) 
+word_vectors_Drug <- rownames_to_column(word_vectors_Drug, var = "words") 
+```
+
+```{r, echo=FALSE}
+library(softmaxreg) 
+docVectors_Drug = function(x) { wordEmbed(x, word_vectors_Drug, meanVec = TRUE) } 
+# Applying the function docVectors function on the entire reviews dataset 
+# This will result in word embedding representation of the entire reviews dataset 
+temp_Drug <- t(sapply(text_Drug$SentimentText, docVectors_Drug)) 
+```
+
+```{r, echo=FALSE}
+# Splitting the dataset into train and test portions 
+temp_train_Drug <- temp_Drug[1:N_train_Drug,] 
+temp_test_Drug <- temp_Drug[(N_train_Drug+1):N_Drug,] 
+labels_train_Drug <- as.factor(as.character(text_Drug[1:N_train_Drug,]$Sentiment)) 
+labels_test_Drug <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug,]$Sentiment)) 
+# Using randomforest to build a model on train data 
+library(randomForest)
+rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntree=20) 
+print(rf_senti_classifier_Drug)
+```
+
+```{r, echo=FALSE}
+# Predicting labels using the randomforest model created 
+rf_predicts_Drug<-predict(rf_senti_classifier_Drug, temp_test_Drug) 
+# Estimating the accuracy from the predictions 
+library(rminer) 
+print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
+```
+
+# FastText word embedding
+## Amazon reviews
 ```{r}
 library(fastTextR) 
 # Input reviews file 
@@ -307,278 +674,20 @@ library(rminer)
 print(mmetric(actlabels, ft_preds, c("ACC")))
 ```
 
-
-# Drug Data
-```{r}
-set.seed(1)
-N_Drug <- 146942
-reviews_text_Drug <- readLines("Drug Train.csv", n = N_Drug)
-reviews_text_Drug <- data.frame(reviews_text_Drug)
-```
-
-```{r}
-library(tidyr) 
-reviews_text_Drug <- separate(data = reviews_text_Drug, col = reviews_text_Drug, 
-                            into = c("Sentiment", "SentimentText"), sep = 4)
-reviews_text_Drug <- reviews_text_Drug[-1,]
-N_Drug <- N_Drug - 1
-```
-
-```{r}
-# Retaining only alphanumeric values in the sentiment column
-reviews_text_Drug$Sentiment <- gsub("[^[:alnum:] ]","",reviews_text_Drug$Sentiment) 
-# Retaining only alphanumeric values in the sentiment text
-reviews_text_Drug$SentimentText <- gsub("[^[:alnum:] ]"," ",reviews_text_Drug$SentimentText) 
-# Replacing multiple spaces in the text with single space
-reviews_text_Drug$SentimentText <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", 
-                                      reviews_text_Drug$SentimentText, perl=TRUE)
-```
-
-
-```{r}
-# Balance our data
-minlabel <- names(which(table(reviews_text_Drug$Sentiment)==
-                        min(table(reviews_text_Drug$Sentiment))))
-maxlabel <- names(which(table(reviews_text_Drug$Sentiment)==
-                        max(table(reviews_text_Drug$Sentiment))))
-
-n_maxlabel <- min(table(reviews_text_Drug$Sentiment))
-minlabelid <- c(1:N_Drug)[reviews_text_Drug$Sentiment==minlabel]
-maxlabelid <- sample(c(1:N_Drug)[reviews_text_Drug$Sentiment==maxlabel],n_maxlabel)
-balanceid <- sample(c(minlabelid,maxlabelid))
-reviews_text_Drug <- reviews_text_Drug[balanceid,]
-
-N_Drug <- nrow(reviews_text_Drug)
-N_train_Drug <- round(0.8*N_Drug)
-```
-
-
-```{r}
-# Writing the output to a file that can be consumed in other projects
-write.table(reviews_text_Drug,file = "Sentiment Analysis Dataset_Drug.csv",
-            row.names = F, col.names = T,sep=',')
-```
-
-```{r}
-reviews_text_Drug <- readLines("Drug Train.csv", n = 146942)
-reviews_text_Drug <- reviews_text_Drug[-1]
-reviews_text_Drug <- reviews_text_Drug[balanceid]
-# Basic EDA to confirm that the data is read correctly 
-print(class(reviews_text_Drug)) 
-print(length(reviews_text_Drug)) 
-# print(head(reviews_text_Drug,2)) 
-# Replacing the positive sentiment value 2 with __label__2
-reviews_text_Drug<-gsub("\\\"2\\\",","__label__2 ",reviews_text_Drug) 
-# Replacing the negative sentiment value 1 with __label__1
-reviews_text_Drug<-gsub("\\\"1\\\",","__label__1 ",reviews_text_Drug) 
-# Removing the unnecessary \" characters 
-reviews_text_Drug<-gsub("\\\""," ",reviews_text_Drug) 
-# Replacing multiple spaces in the text with single space
-reviews_text_Drug<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text_Drug, perl=TRUE) 
-# Basic EDA post the required processing to confirm input is as desired 
-print("EDA POST PROCESSING") 
-print(class(reviews_text_Drug)) 
-print(length(reviews_text_Drug)) 
-# print(head(reviews_text_Drug,2)) 
-# Writing the revamped file to the directory so we could use it with 
-# fastText sentiment analyzer project
-fileConn<-file("Sentiment Analysis Dataset_ft_Drug.txt") 
-writeLines(reviews_text_Drug, fileConn) 
-close(fileConn)
-```
-
-## BoW approach
-```{r}
-library(SnowballC) 
-library(tm) 
-# Reading the transformed file as a dataframe 
-text_Drug <- read.table(file='Sentiment Analysis Dataset_Drug.csv', sep=',', header = TRUE) 
-# Checking the dataframe to confirm everything is in tact 
-print(dim(text_Drug)) 
-```
-
-```{r}
-# Transforming the text into volatile corpus 
-train_corp_Drug <- VCorpus(VectorSource(text_Drug$SentimentText)) 
-print(train_corp_Drug)
-```
-
-```{r}
-# Creating document term matrix 
-dtm_train_Drug <- DocumentTermMatrix(train_corp_Drug, control = 
-                                       list(tolower = TRUE, removeNumbers = TRUE, stopwords = TRUE, 
-                                             removePunctuation = TRUE, stemming = TRUE)) 
-# Basic EDA on dtm 
-inspect(dtm_train_Drug)
-```
-
-```{r}
-# Removing sparse terms 
-dtm_train_Drug <- removeSparseTerms(dtm_train_Drug, 0.99) 
-inspect(dtm_train_Drug)
-```
-
-```{r}
-# Splitting the train and test DTM 
-dtm_train_train_Drug <- dtm_train_Drug[1:N_train_Drug, ] 
-dtm_train_test_Drug <- dtm_train_Drug[(N_train_Drug+1):N_Drug, ] 
-dim(dtm_train_Drug)
-dtm_train_train_Drug_labels <- as.factor(as.character(text_Drug[1:N_train_Drug, ]$Sentiment)) 
-dtm_train_test_Drug_labels <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug, ]$Sentiment))
-```
-
-```{r}
-# Convert the cell values with a non-zero value to Y, and in case of a zero we convert it to N
-cellconvert <- function(x) { x <- ifelse(x > 0, "Y", "N") }
-```
-
-```{r}
-# Applying the function to rows in training and test datasets 
-dtm_train_train_Drug <- apply(dtm_train_train_Drug, MARGIN = 2,cellconvert) 
-dtm_train_test_Drug <- apply(dtm_train_test_Drug, MARGIN = 2,cellconvert) 
-```
-
-```{r}
-# Training the naive bayes classifier on the training dtm 
-library(e1071) 
-nb_senti_classifier_Drug <- naiveBayes(dtm_train_train_Drug, dtm_train_train_Drug_labels) 
-# Printing the summary of the model created 
-summary(nb_senti_classifier_Drug)
-```
-
-```{r}
-# Making predictions on the test data dtm 
-nb_predicts_Drug <- predict(nb_senti_classifier_Drug, dtm_train_test_Drug, type="class") 
-```
-
-```{r}
-# Computing accuracy of the model 
-library(rminer) 
-print(mmetric(nb_predicts_Drug, dtm_train_test_Drug_labels, c("ACC")))
-```
-
-
-## Pretrained word2vec word embedding
-```{r}
-library(softmaxreg) 
-# Importing the word2vec pretrained vector into memory 
-data(word2vec)
-dim(word2vec)
-```
-
-```{r}
-# Function to get word vector for each review 
-docVectors = function(x) { wordEmbed(x, word2vec, meanVec = TRUE) } 
-text_Drug <- read.csv(file='Sentiment Analysis Dataset_Drug.csv', header = TRUE) 
-# Applying the docVector function on each of the reviews 
-# Storing the matrix of word vectors as temp 
-temp_Drug <- t(sapply(text_Drug$SentimentText, docVectors)) 
-dim(temp_Drug)
-```
-
-```{r}
-# Splitting the dataset into train and test 
-temp_train_Drug <- temp_Drug[1:N_train_Drug,] 
-temp_test_Drug <- temp_Drug[(N_train_Drug+1):N_Drug,] 
-labels_train_Drug <- as.factor(as.character(text_Drug[1:N_train_Drug,]$Sentiment)) 
-labels_test_Drug <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug,]$Sentiment)) 
-library(randomForest) 
-# Training a model using random forest classifier with training dataset 
-# Observe that we are using 20 trees to create the model 
-rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntree=20) 
-print(rf_senti_classifier_Drug)
-```
-
-```{r}
-# Making predictions on the dataset 
-rf_predicts_Drug <- predict(rf_senti_classifier_Drug, temp_test_Drug) 
-library(rminer) 
-print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
-```
-
-## GloVe word embedding
-```{r}
-library(text2vec) 
-# Reading the dataset 
-text_Drug <- read.csv(file='Sentiment Analysis Dataset_Drug.csv', header = TRUE) 
-# Subsetting only the review text so as to create Glove word embedding 
-wiki_Drug <- as.character(text_Drug$SentimentText) 
-# Create iterator over tokens 
-tokens_Drug <- space_tokenizer(wiki_Drug) 
-# Create vocabulary. Terms will be unigrams (simple words). 
-it_Drug <- itoken(tokens_Drug, progressbar = FALSE) 
-vocab_Drug <- create_vocabulary(it_Drug) 
-# Consider a term in the vocabulary if and only if the term has appeared at least 
-# three times in the dataset 
-vocab_Drug <- prune_vocabulary(vocab_Drug, term_count_min = 3L) 
-# Use the filtered vocabulary
-vectorizer_Drug <- vocab_vectorizer(vocab_Drug) 
-# Use window of 5 for context words and create a term co-occurance matrix 
-tcm_Drug <- create_tcm(it_Drug, vectorizer_Drug, skip_grams_window = 5L) 
-# Create the glove embedding for each in the vocab and 
-# the dimension of the word embedding should set to 50 
-# x_max is the maximum number of co-occurrences to use in the weighting function 
-glove <- GlobalVectors$new(rank = 50, x_max = 100)
-wv_main_Drug <- glove$fit_transform(tcm_Drug, n_iter = 10, convergence_tol = 0.01)
-```
-
-```{r}
-# Glove model learns two sets of word vectors - main and context
-# Both matrices may be added to get the combined word vector 
-wv_context <- glove$components 
-word_vectors_Drug <- wv_main_Drug + t(wv_context) 
-# Converting the word_vector to a dataframe for visualization 
-word_vectors_Drug <- data.frame(word_vectors_Drug) 
-# The word for each embedding is set as row name by default 
-# Using the tibble library rownames_to_column function, the rownames is copied 
-# as first column of the dataframe 
-# We also name the first column of the dataframe as words 
-library(tibble) 
-word_vectors_Drug <- rownames_to_column(word_vectors_Drug, var = "words") 
-```
-
-```{r}
-library(softmaxreg) 
-docVectors_Drug = function(x) { wordEmbed(x, word_vectors_Drug, meanVec = TRUE) } 
-# Applying the function docVectors function on the entire reviews dataset 
-# This will result in word embedding representation of the entire reviews dataset 
-temp_Drug <- t(sapply(text_Drug$SentimentText, docVectors_Drug)) 
-```
-
-```{r}
-# Splitting the dataset into train and test portions 
-temp_train_Drug <- temp_Drug[1:N_train_Drug,] 
-temp_test_Drug <- temp_Drug[(N_train_Drug+1):N_Drug,] 
-labels_train_Drug <- as.factor(as.character(text_Drug[1:N_train_Drug,]$Sentiment)) 
-labels_test_Drug <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug,]$Sentiment)) 
-# Using randomforest to build a model on train data 
-library(randomForest)
-rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntree=20) 
-print(rf_senti_classifier_Drug)
-```
-
-```{r}
-# Predicting labels using the randomforest model created 
-rf_predicts_Drug<-predict(rf_senti_classifier_Drug, temp_test_Drug) 
-# Estimating the accuracy from the predictions 
-library(rminer) 
-print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
-```
-
-## FastText word embedding
-```{r}
+## Drug Data
+```{r, echo=FALSE}
 library(fastTextR) 
 # Input reviews file 
 text_Drug <- readLines("Sentiment Analysis Dataset_ft_Drug.txt") 
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Dividing the reviews into training and test 
 temp_train_Drug <- text_Drug[1:N_train_Drug]
 temp_test_Drug <- text_Drug[(N_train_Drug+1):N_Drug] 
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Creating txt file for train and test dataset 
 fileConn <- file("train_Drug.ft.txt") 
 writeLines(temp_train_Drug, fileConn) 
@@ -591,7 +700,7 @@ temp_test_Drug_nolabel <- gsub("__label__1", "", temp_test_Drug, perl=TRUE)
 temp_test_Drug_nolabel <- gsub("__label__2", "", temp_test_Drug_nolabel, perl=TRUE)
 ```
 
-```{r}
+```{r, echo=FALSE}
 fileConn <- file("test_Drug_nolabel.ft.txt") 
 writeLines(temp_test_Drug_nolabel, fileConn) 
 close(fileConn) 
@@ -601,12 +710,12 @@ model_Drug <- ft_train("train_Drug.ft.txt", method = "supervised", control = ft_
 words_Drug <- ft_words(model_Drug) 
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Obtain word vectors from a previously trained model. 
 word_vec_Drug <- ft_word_vectors(model_Drug, words_Drug) 
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Predicting the labels for the reviews in the no labels test dataset 
 # Getting the predictions into a dataframe so as to compute performance measurement
 ft_preds_Drug <- ft_predict(model_Drug, newdata = temp_test_Drug_nolabel) 
