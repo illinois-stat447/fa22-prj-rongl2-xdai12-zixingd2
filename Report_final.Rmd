@@ -217,20 +217,29 @@ neg.list = words[id[myp[id]<0]]
 negvalue = myp[id][myp[id]<0][1:50]
 ```
 
-
-```{r}
+```{r, results='hide'}
 # Word Cloud for positive words
 library(wordcloud)
-wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(4,.5), min.freq = 5, 
+wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(6,.2), min.freq = 5, 
+          random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+# Word Cloud for negative words
+wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(4.3,.2), min.freq = 5, 
           random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
 ```
 
 ```{r}
-# Word Cloud for negative words
-wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(3,.5), min.freq = 5, 
-          random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+library(png)
+par(mfrow=c(1, 2), mar=c(1, 0, 3, 0))
+plot.new()
+plot.window(xlim=c(0, 1), ylim=c(0, 1), asp=1)
+rasterImage(readPNG("amazonpos"), 0, 0, 1, 1)
+title('Positive words', line = -0.5)
+plot.new()
+plot.window(xlim=c(0, 1), ylim=c(0, 1), asp=1)
+rasterImage(readPNG("amazonneg"), 0, 0, 1, 1)
+title('Negative words', line = -0.5)
+title("Word Clouds from Amazon reviews", line = -22, outer = TRUE)
 ```
-
 
 
 
@@ -343,18 +352,27 @@ negvalue = myp[id][myp[id]<0][1:50]
 ```
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, results='hide'}
 # Word Cloud for positive words
 library(wordcloud)
 wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(3,.5), min.freq = 5, 
           random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
-```
-
-
-```{r, echo=FALSE}
 # Word Cloud for negative words
 wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(3,.5), min.freq = 5, 
           random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
+```
+```{r, echo=FALSE}
+library(png)
+par(mfrow=c(1, 2), mar=c(1, 0, 3, 0))
+plot.new()
+plot.window(xlim=c(0, 1), ylim=c(0, 1), asp=1)
+rasterImage(readPNG("drugpos"), 0, 0, 1, 1)
+title('Positive words', line = -0.5)
+plot.new()
+plot.window(xlim=c(0, 1), ylim=c(0, 1), asp=1)
+rasterImage(readPNG("drugneg"), 0, 0, 1, 1)
+title('Negative words', line = -0.5)
+title("Word Clouds from Drug reviews", line = -22, outer = TRUE)
 ```
 
 ```{r, echo=FALSE}
@@ -434,6 +452,7 @@ rf_predicts <- predict(rf_senti_classifier, temp_test)
 library(rminer) 
 print(mmetric(rf_predicts, labels_test, c("ACC")))
 ```
+
 ## Drug Data
 
 ```{r, echo=FALSE}
@@ -472,7 +491,6 @@ rf_predicts_Drug <- predict(rf_senti_classifier_Drug, temp_test_Drug)
 library(rminer) 
 print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 ```
-
 
 # GloVe word embedding
 ## Amazon reviews
@@ -544,7 +562,6 @@ rf_predicts <- predict(rf_senti_classifier, temp_test)
 library(rminer) 
 print(mmetric(rf_predicts, labels_test, c("ACC")))
 ```
-
 ## Drug Data
 ```{r, echo=FALSE}
 library(text2vec) 
