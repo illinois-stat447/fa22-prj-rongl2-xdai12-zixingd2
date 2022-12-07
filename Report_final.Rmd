@@ -22,7 +22,7 @@ reviews_text <- readLines("amazon_review_polarity_csv/train.csv", n = N)
 reviews_text <- data.frame(reviews_text)
 ```
 
-```{r}
+```{r, message=FALSE}
 library(tidyr) 
 reviews_text <- separate(data = reviews_text, col = reviews_text, 
                        into = c("Sentiment", "SentimentText"), sep = 4)
@@ -150,7 +150,7 @@ close(fileConn)
 
 # BoW approach
 ## Amazon reviews
-```{r}
+```{r, message=FALSE}
 library(SnowballC) 
 library(tm) 
 # Reading the transformed file as a dataframe 
@@ -187,7 +187,7 @@ v.size = dim(dtm_train)[2]
 ytrain = as.numeric(text$Sentiment)
 ```
 
-```{r}
+```{r, message=FALSE}
 # Using two-sample t-test to find the most different word to show our Word Cloud
 library(slam)
 summ = matrix(0, nrow=v.size, ncol=4)
@@ -217,7 +217,7 @@ neg.list = words[id[myp[id]<0]]
 negvalue = myp[id][myp[id]<0][1:50]
 ```
 
-```{r, results='hide'}
+```{r, message=FALSE, fig.show='hide', warning=FALSE}
 # Word Cloud for positive words
 library(wordcloud)
 wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(6,.2), min.freq = 5, 
@@ -227,7 +227,7 @@ wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(4.3,.2), min.fre
           random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
 ```
 
-```{r}
+```{r, message=FALSE}
 library(png)
 par(mfrow=c(1, 2), mar=c(1, 0, 3, 0))
 plot.new()
@@ -263,7 +263,7 @@ dtm_train_train <- apply(dtm_train_train, MARGIN = 2,cellconvert)
 dtm_train_test <- apply(dtm_train_test, MARGIN = 2,cellconvert) 
 ```
 
-```{r}
+```{r, message=FALSE}
 # Training the naive bayes classifier on the training dtm 
 library(e1071) 
 nb_senti_classifier <- naiveBayes(dtm_train_train,dtm_train_train_labels) 
@@ -276,7 +276,7 @@ summary(nb_senti_classifier)
 nb_predicts <- predict(nb_senti_classifier, dtm_train_test,type="class") 
 ```
 
-```{r}
+```{r, message=FALSE}
 # Computing accuracy of the model 
 library(rminer) 
 print(mmetric(nb_predicts, dtm_train_test_labels, c("ACC")))
@@ -285,7 +285,7 @@ print(mmetric(nb_predicts, dtm_train_test_labels, c("ACC")))
 
 
 ## Drug Data
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(SnowballC) 
 library(tm) 
 # Reading the transformed file as a dataframe 
@@ -321,7 +321,7 @@ v.size = dim(dtm_train_Drug)[2]
 ytrain = as.numeric(text_Drug$Sentiment)
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Using two-sample t-test to find the most different word to show our Word Cloud
 library(slam)
 summ = matrix(0, nrow=v.size, ncol=4)
@@ -352,7 +352,7 @@ negvalue = myp[id][myp[id]<0][1:50]
 ```
 
 
-```{r, echo=FALSE, results='hide'}
+```{r, message=FALSE, echo=FALSE, fig.show='hide', warning=FALSE}
 # Word Cloud for positive words
 library(wordcloud)
 wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(3,.5), min.freq = 5, 
@@ -361,7 +361,7 @@ wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(3,.5), min.freq = 5,
 wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(3,.5), min.freq = 5, 
           random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
 ```
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(png)
 par(mfrow=c(1, 2), mar=c(1, 0, 3, 0))
 plot.new()
@@ -394,7 +394,7 @@ dtm_train_train_Drug <- apply(dtm_train_train_Drug, MARGIN = 2,cellconvert)
 dtm_train_test_Drug <- apply(dtm_train_test_Drug, MARGIN = 2,cellconvert) 
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Training the naive bayes classifier on the training dtm 
 library(e1071) 
 nb_senti_classifier_Drug <- naiveBayes(dtm_train_train_Drug, dtm_train_train_Drug_labels) 
@@ -407,7 +407,7 @@ summary(nb_senti_classifier_Drug)
 nb_predicts_Drug <- predict(nb_senti_classifier_Drug, dtm_train_test_Drug, type="class") 
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Computing accuracy of the model 
 library(rminer) 
 print(mmetric(nb_predicts_Drug, dtm_train_test_Drug_labels, c("ACC")))
@@ -416,7 +416,7 @@ print(mmetric(nb_predicts_Drug, dtm_train_test_Drug_labels, c("ACC")))
 
 # Pretrained word2vec word embedding
 ## Amazon reviews
-```{r}
+```{r, message=FALSE}
 library(softmaxreg) 
 # Importing the word2vec pretrained vector into memory 
 data(word2vec)
@@ -433,7 +433,7 @@ temp <- t(sapply(text$SentimentText, docVectors))
 dim(temp)
 ```
 
-```{r}
+```{r, message=FALSE}
 # Splitting the dataset into train and test 
 temp_train <- temp[1:N_t,] 
 temp_test <- temp[(N_t+1):N,] 
@@ -446,7 +446,7 @@ rf_senti_classifier <- randomForest(temp_train, labels_train,ntree=20)
 print(rf_senti_classifier)
 ```
 
-```{r}
+```{r, message=FALSE}
 # Making predictions on the dataset 
 rf_predicts <- predict(rf_senti_classifier, temp_test) 
 library(rminer) 
@@ -455,7 +455,7 @@ print(mmetric(rf_predicts, labels_test, c("ACC")))
 
 ## Drug Data
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(softmaxreg) 
 # Importing the word2vec pretrained vector into memory 
 data(word2vec)
@@ -472,7 +472,7 @@ temp_Drug <- t(sapply(text_Drug$SentimentText, docVectors))
 dim(temp_Drug)
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Splitting the dataset into train and test 
 temp_train_Drug <- temp_Drug[1:N_train_Drug,] 
 temp_test_Drug <- temp_Drug[(N_train_Drug+1):N_Drug,] 
@@ -485,7 +485,7 @@ rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntre
 print(rf_senti_classifier_Drug)
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Making predictions on the dataset 
 rf_predicts_Drug <- predict(rf_senti_classifier_Drug, temp_test_Drug) 
 library(rminer) 
@@ -494,7 +494,7 @@ print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 
 # GloVe word embedding
 ## Amazon reviews
-```{r}
+```{r, message=FALSE}
 # Including the required library 
 library(text2vec) 
 # Reading the dataset 
@@ -520,7 +520,7 @@ glove <- GlobalVectors$new(rank = 50, x_max = 100)
 wv_main <- glove$fit_transform(tcm, n_iter = 10, convergence_tol = 0.01)
 ```
 
-```{r}
+```{r, message=FALSE}
 # Glove model learns two sets of word vectors - main and context. 
 # Both matrices may be added to get the combined word vector 
 wv_context <- glove$components 
@@ -535,7 +535,7 @@ library(tibble)
 word_vectors <- rownames_to_column(word_vectors, var = "words") 
 ```
 
-```{r}
+```{r, message=FALSE}
 library(softmaxreg) 
 docVectors = function(x) { wordEmbed(x, word_vectors, meanVec = TRUE) } 
 # Applying the function docVectors function on the entire reviews dataset 
@@ -543,7 +543,7 @@ docVectors = function(x) { wordEmbed(x, word_vectors, meanVec = TRUE) }
 temp <- t(sapply(text$SentimentText, docVectors)) 
 ```
 
-```{r}
+```{r, message=FALSE}
 # Splitting the dataset into train and test portions 
 temp_train <- temp[1:N_t,] 
 temp_test <- temp[(N_t+1):N,] 
@@ -555,7 +555,7 @@ rf_senti_classifier <- randomForest(temp_train, labels_train,ntree=20)
 print(rf_senti_classifier)
 ```
 
-```{r}
+```{r, message=FALSE}
 # Predicting labels using the randomforest model created 
 rf_predicts <- predict(rf_senti_classifier, temp_test) 
 # Estimating the accuracy from the predictions 
@@ -563,7 +563,7 @@ library(rminer)
 print(mmetric(rf_predicts, labels_test, c("ACC")))
 ```
 ## Drug Data
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(text2vec) 
 # Reading the dataset 
 text_Drug <- read.csv(file='Sentiment Analysis Dataset_Drug.csv', header = TRUE) 
@@ -588,7 +588,7 @@ glove <- GlobalVectors$new(rank = 50, x_max = 100)
 wv_main_Drug <- glove$fit_transform(tcm_Drug, n_iter = 10, convergence_tol = 0.01)
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Glove model learns two sets of word vectors - main and context
 # Both matrices may be added to get the combined word vector 
 wv_context <- glove$components 
@@ -603,7 +603,7 @@ library(tibble)
 word_vectors_Drug <- rownames_to_column(word_vectors_Drug, var = "words") 
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(softmaxreg) 
 docVectors_Drug = function(x) { wordEmbed(x, word_vectors_Drug, meanVec = TRUE) } 
 # Applying the function docVectors function on the entire reviews dataset 
@@ -611,7 +611,7 @@ docVectors_Drug = function(x) { wordEmbed(x, word_vectors_Drug, meanVec = TRUE) 
 temp_Drug <- t(sapply(text_Drug$SentimentText, docVectors_Drug)) 
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Splitting the dataset into train and test portions 
 temp_train_Drug <- temp_Drug[1:N_train_Drug,] 
 temp_test_Drug <- temp_Drug[(N_train_Drug+1):N_Drug,] 
@@ -623,7 +623,7 @@ rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntre
 print(rf_senti_classifier_Drug)
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Predicting labels using the randomforest model created 
 rf_predicts_Drug<-predict(rf_senti_classifier_Drug, temp_test_Drug) 
 # Estimating the accuracy from the predictions 
@@ -633,7 +633,7 @@ print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 
 # FastText word embedding
 ## Amazon reviews
-```{r}
+```{r, message=FALSE}
 library(fastTextR) 
 # Input reviews file 
 text <- readLines("Sentiment Analysis Dataset_ft.txt") 
@@ -674,7 +674,7 @@ words <- ft_words(model)
 word_vec <- ft_word_vectors(model, words) 
 ```
 
-```{r}
+```{r, message=FALSE}
 # Predicting the labels for the reviews in the no labels test dataset 
 # Getting the predictions into a dataframe so as to compute performance measurement
 ft_preds <- ft_predict(model, newdata = temp_test_nolabel) 
@@ -692,7 +692,7 @@ print(mmetric(actlabels, ft_preds, c("ACC")))
 ```
 
 ## Drug Data
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 library(fastTextR) 
 # Input reviews file 
 text_Drug <- readLines("Sentiment Analysis Dataset_ft_Drug.txt") 
@@ -732,7 +732,7 @@ words_Drug <- ft_words(model_Drug)
 word_vec_Drug <- ft_word_vectors(model_Drug, words_Drug) 
 ```
 
-```{r, echo=FALSE}
+```{r, message=FALSE, echo=FALSE}
 # Predicting the labels for the reviews in the no labels test dataset 
 # Getting the predictions into a dataframe so as to compute performance measurement
 ft_preds_Drug <- ft_predict(model_Drug, newdata = temp_test_Drug_nolabel) 
