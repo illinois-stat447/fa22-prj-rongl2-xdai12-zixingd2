@@ -1,75 +1,85 @@
 ---
-title: "Report_final"
-author: "rongl2-xdai12-zixingd2"
+title: "Sentiment Analysis for Amazon Review and Drug Review"
+author: "fa22-prj-rongl2-xdai12-zixingd2"
 date: "`r Sys.Date()`"
 output:
    pdf_document:
       fig_caption: true
       number_sections: true
+bibliography: references.bib
 ---
 
-\newpage 
 \tableofcontents 
 \newpage
 
-# Data Prepossessing
-## Amazon reviews
+# Introduction
+In recent years, machine learning techniques have become increasingly popular and relevant to solving text and sentiment-related problems. It has boosted performance on several tasks and significantly reduced the necessity for human efforts. For this project, we focused on text classification, especially sentiment analysis, on two datasets, *Amazon Review* and *Drug Review*. Although the *Amazon Review* dataset is popular and was being used for many research papers and projects, most code works were carried out using Python. Therefore, we decided to explore more on implementing four classic Natural Language Processing (NLP) methods using R packages. We first replicated the R code from existing literature for the *Amazon Review* dataset. We adapted them to a newer but less popular UCI Machine Learning Repository dataset. Our goal for the project is to compare classifiers, including \verb|BoW|, \verb|Word2Vec|, \verb|GloVe|, \verb|fastText| for two different datasets. 
+
+# Data 
+## Dataset Overview  
+For the *Amazon Review* dataset, we use the dataset constructed and made available by @zhang2015character. The dataset contains about 1,800,000 training samples and 200,000 testing samples with three attributes, which are classification labels (1 for negative reviews and 2 for positive reviews), the title of each review text, and the review text body. Due to the limit of computer computation ability, we pulled out the first 100,000 data samples and split 80% of the data into the training set and 20% of the data into the testing set. 
+
+## Dataset Prepossessing
+
+### Amazon reviews
 ```{r}
 set.seed(1)
-N <- 100000
-N_t <- 0.8*N
-reviews_text <- readLines("amazon_review_polarity_csv/train.csv", n = N)
-reviews_text <- data.frame(reviews_text)
+N_amazon <- 100000
+N_train_amazon <- 0.8*N_amazon
+reviews_amazon <- readLines("amazon_review_polarity_csv/train.csv", n = N_amazon)
+reviews_amazon <- data.frame(reviews_amazon)
 ```
 
 ```{r, message=FALSE}
 library(tidyr) 
-reviews_text <- separate(data = reviews_text, col = reviews_text, 
+reviews_amazon <- separate(data = reviews_amazon, col = reviews_amazon, 
                        into = c("Sentiment", "SentimentText"), sep = 4)
+# Head rows of the data:
+head(reviews_amazon)
 ```
 
 ```{r}
 # Retaining only alphanumeric values in the sentiment column
-reviews_text$Sentiment <- gsub("[^[:alnum:] ]","",reviews_text$Sentiment) 
+reviews_amazon$Sentiment <- gsub("[^[:alnum:] ]","",reviews_amazon$Sentiment) 
 # Retaining only alphanumeric values in the sentiment text
-reviews_text$SentimentText <- gsub("[^[:alnum:] ]"," ",reviews_text$SentimentText) 
+reviews_amazon$SentimentText <- gsub("[^[:alnum:] ]"," ",reviews_amazon$SentimentText) 
 # Replacing multiple spaces in the text with single space
-reviews_text$SentimentText <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", 
-                                 reviews_text$SentimentText, perl=TRUE) 
+reviews_amazon$SentimentText <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", 
+                                 reviews_amazon$SentimentText, perl=TRUE) 
 # Writing the output to a file that can be consumed in other projects
-write.table(reviews_text,file = "Sentiment Analysis Dataset.csv",row.names = F, 
+write.table(reviews_amazon,file = "Sentiment Analysis Dataset.csv",row.names = F, 
             col.names = T,sep=',')
 ```
 
 ```{r}
-reviews_text <- readLines('amazon_review_polarity_csv/train.csv', n = N)
+reviews_amazon <- readLines('amazon_review_polarity_csv/train.csv', n = N_amazon)
 # Basic EDA to confirm that the data is read correctly 
-print(class(reviews_text)) 
-print(length(reviews_text)) 
-# print(head(reviews_text,2)) 
+print(class(reviews_amazon)) 
+print(length(reviews_amazon)) 
+# print(head(reviews_amazon,2)) 
 # Replacing the positive sentiment value 2 with __label__2
-reviews_text <- gsub("\\\"2\\\",","__label__2 ",reviews_text) 
+reviews_amazon <- gsub("\\\"2\\\",","__label__2 ",reviews_amazon) 
 # Replacing the negative sentiment value 1 with __label__1
-reviews_text <- gsub("\\\"1\\\",","__label__1 ",reviews_text) 
+reviews_amazon <- gsub("\\\"1\\\",","__label__1 ",reviews_amazon) 
 # Removing the unnecessary \" characters 
-reviews_text <- gsub("\\\""," ",reviews_text) 
+reviews_amazon <- gsub("\\\""," ",reviews_amazon) 
 # Replacing multiple spaces in the text with single space
-reviews_text <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text, perl=TRUE) 
+reviews_amazon <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_amazon, perl=TRUE) 
 # Basic EDA post the required processing to confirm input is as desired 
-print("EDA POST PROCESSING") 
-print(class(reviews_text)) 
-print(length(reviews_text)) 
-# print(head(reviews_text,2)) 
+# print("EDA POST PROCESSING") 
+# print(class(reviews_amazon)) 
+# print(length(reviews_amazon)) 
+# print(head(reviews_amazon,2)) 
 # Writing the revamped file to the directory so we could use it with 
 # fastText sentiment analyzer project
 fileConn <- file("Sentiment Analysis Dataset_ft.txt") 
-writeLines(reviews_text, fileConn) 
+writeLines(reviews_amazon, fileConn) 
 close(fileConn)
 ```
 
 
 
-## Drug Data
+### Drug Data
 ```{r, echo=FALSE}
 N_Drug <- 146942
 reviews_text_Drug <- readLines("Drug Train.csv", n = N_Drug)
@@ -81,6 +91,8 @@ reviews_text_Drug <- separate(data = reviews_text_Drug, col = reviews_text_Drug,
                             into = c("Sentiment", "SentimentText"), sep = 4)
 reviews_text_Drug <- reviews_text_Drug[-1,]
 N_Drug <- N_Drug - 1
+# Head rows of the data:
+head(reviews_text_Drug)
 ```
 
 ```{r, echo=FALSE}
@@ -135,9 +147,9 @@ reviews_text_Drug<-gsub("\\\""," ",reviews_text_Drug)
 # Replacing multiple spaces in the text with single space
 reviews_text_Drug<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text_Drug, perl=TRUE) 
 # Basic EDA post the required processing to confirm input is as desired 
-print("EDA POST PROCESSING") 
-print(class(reviews_text_Drug)) 
-print(length(reviews_text_Drug)) 
+# print("EDA POST PROCESSING") 
+# print(class(reviews_text_Drug)) 
+# print(length(reviews_text_Drug)) 
 # print(head(reviews_text_Drug,2)) 
 # Writing the revamped file to the directory so we could use it with 
 # fastText sentiment analyzer project
@@ -148,57 +160,66 @@ close(fileConn)
 
 
 
+
 # BoW approach
 ## Amazon reviews
 ```{r, message=FALSE}
 library(SnowballC) 
 library(tm) 
 # Reading the transformed file as a dataframe 
-text <- read.table(file='Sentiment Analysis Dataset.csv', sep=',', header = TRUE) 
+text_amazon <- read.table(file='Sentiment Analysis Dataset.csv', sep=',', header = TRUE) 
 # Checking the dataframe to confirm everything is in tact 
-print(dim(text)) 
+print(dim(text_amazon)) 
 ```
 
 ```{r}
 # Transforming the text into volatile corpus 
-train_corp <- VCorpus(VectorSource(text$SentimentText)) 
-print(train_corp)
+amazon_corp <- VCorpus(VectorSource(text_amazon$SentimentText)) 
+print(amazon_corp)
 ```
 
 ```{r}
 # Creating document term matrix 
-dtm_train <- DocumentTermMatrix(train_corp, control = list( tolower = TRUE, 
+dtm_amazon <- DocumentTermMatrix(amazon_corp, control = list( tolower = TRUE, 
    removeNumbers = TRUE, stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE)) 
 # Basic EDA on dtm 
-inspect(dtm_train)
+inspect(dtm_amazon)
 ```
 
 ```{r}
 # Removing sparse terms 
-dtm_train = removeSparseTerms(dtm_train, 0.99) 
-inspect(dtm_train)
+dtm_amazon = removeSparseTerms(dtm_amazon, 0.99) 
+inspect(dtm_amazon)
 ```
 
 
+We found that some of the selected terms are difficult to interpret. So we decided to first filter out a vocab with words that we can interpret. We used a simple screening method, which we described in discriminant analysis before:  two-sample t-test. Assume we have one-dimensional observations from two groups
 
+$$X_{1}, X_{2}, \dots, X_{m}, \quad Y_{1}, Y_{2}, \dots, Y_{n}X$$
+
+to test whether the X population and the Y population have the same mean, we compute the following two-sample t-statistic $\frac{\bar{X} - \bar{Y}}{\sqrt{\frac{s^2_X}{m} + \frac{s^2_Y}{n}}}.$
+
+where $s_X^2$ denotes the sample variance of X.
+
+Again, we use the training data from the first split. Since dtm_train is a large sparse matrix, I use commands from the R package slam to efficiently compute the mean and var for each column of dtm_train.
 ```{r}
 # Word Cloud preparing
-v.size = dim(dtm_train)[2]
-ytrain = as.numeric(text$Sentiment)
+v.size = dim(dtm_amazon)[2]
+ytrain = as.numeric(text_amazon$Sentiment)
 ```
 
 ```{r, message=FALSE}
-# Using two-sample t-test to find the most different word to show our Word Cloud
+# Using two-sample t-test to find the most represent words to show our Word Cloud
 library(slam)
 summ = matrix(0, nrow=v.size, ncol=4)
 summ[,1] = colapply_simple_triplet_matrix(
-  as.simple_triplet_matrix(dtm_train[ytrain==2, ]), mean)
+  as.simple_triplet_matrix(dtm_amazon[ytrain==2, ]), mean)
 summ[,2] = colapply_simple_triplet_matrix(
-  as.simple_triplet_matrix(dtm_train[ytrain==2, ]), var)
+  as.simple_triplet_matrix(dtm_amazon[ytrain==2, ]), var)
 summ[,3] = colapply_simple_triplet_matrix(
-  as.simple_triplet_matrix(dtm_train[ytrain==1, ]), mean)
+  as.simple_triplet_matrix(dtm_amazon[ytrain==1, ]), mean)
 summ[,4] = colapply_simple_triplet_matrix(
-  as.simple_triplet_matrix(dtm_train[ytrain==1, ]), var)
+  as.simple_triplet_matrix(dtm_amazon[ytrain==1, ]), var)
 
 n1 = sum((ytrain)-1); 
 n = length(ytrain)
@@ -207,16 +228,16 @@ n0 = n - n1
 myp = (summ[,1] - summ[,3])/
   sqrt(summ[,2]/n1 + summ[,4]/n0)
 ```
-
+We ordered words by the magnitude of their t-statistics, which are then divided into two lists: positive words and negative words.
 ```{r}
-words = colnames(dtm_train)
+words = colnames(dtm_amazon)
 id = order(abs(myp), decreasing=TRUE)
 pos.list = words[id[myp[id]>0]]
 posvalue = myp[id][myp[id]>0][1:50]
 neg.list = words[id[myp[id]<0]]
 negvalue = myp[id][myp[id]<0][1:50]
 ```
-
+Using the "wordcloud" package to plot the Word Cloud for most represent words, both positive and negative.
 ```{r, message=FALSE, fig.show='hide', warning=FALSE}
 # Word Cloud for positive words
 library(wordcloud)
@@ -246,10 +267,10 @@ title("Word Clouds from Amazon reviews", line = -22, outer = TRUE)
 
 ```{r}
 # Splitting the train and test DTM 
-dtm_train_train <- dtm_train[1:N_t, ] 
-dtm_train_test <- dtm_train[(N_t+1):N, ] 
-dtm_train_train_labels <- as.factor(as.character(text[1:N_t, ]$Sentiment)) 
-dtm_train_test_labels <- as.factor(as.character(text[(N_t+1):N, ]$Sentiment))
+dtm_amazon_train <- dtm_amazon[1:N_train_amazon, ] 
+dtm_amazon_test <- dtm_amazon[(N_train_amazon+1):N_amazon, ] 
+dtm_amazon_train_labels <- as.factor(as.character(text_amazon[1:N_train_amazon, ]$Sentiment)) 
+dtm_amazon_test_labels <- as.factor(as.character(text_amazon[(N_train_amazon+1):N_amazon, ]$Sentiment))
 ```
 
 ```{r}
@@ -259,27 +280,27 @@ cellconvert<- function(x) { x <- ifelse(x > 0, "Y", "N") }
 
 ```{r}
 # Applying the function to rows in training and test datasets 
-dtm_train_train <- apply(dtm_train_train, MARGIN = 2,cellconvert) 
-dtm_train_test <- apply(dtm_train_test, MARGIN = 2,cellconvert) 
+dtm_amazon_train <- apply(dtm_amazon_train, MARGIN = 2,cellconvert) 
+dtm_amazon_test <- apply(dtm_amazon_test, MARGIN = 2,cellconvert) 
 ```
 
 ```{r, message=FALSE}
 # Training the naive bayes classifier on the training dtm 
 library(e1071) 
-nb_senti_classifier <- naiveBayes(dtm_train_train,dtm_train_train_labels) 
+nb_amazon_senti_classifier <- naiveBayes(dtm_amazon_train,dtm_amazon_train_labels) 
 # Printing the summary of the model created 
-summary(nb_senti_classifier)
+summary(nb_amazon_senti_classifier)
 ```
 
 ```{r}
 # Making predictions on the test data dtm 
-nb_predicts <- predict(nb_senti_classifier, dtm_train_test,type="class") 
+nb_amazon_predicts <- predict(nb_amazon_senti_classifier, dtm_amazon_test, type="class") 
 ```
 
 ```{r, message=FALSE}
 # Computing accuracy of the model 
 library(rminer) 
-print(mmetric(nb_predicts, dtm_train_test_labels, c("ACC")))
+print(mmetric(nb_amazon_predicts, dtm_amazon_test_labels, c("ACC")))
 ```
 
 
@@ -426,31 +447,31 @@ dim(word2vec)
 ```{r}
 # Function to get word vector for each review 
 docVectors <- function(x) { wordEmbed(x, word2vec, meanVec = TRUE) } 
-text <- read.csv(file='Sentiment Analysis Dataset.csv', header = TRUE) 
+text_amazon <- read.csv(file='Sentiment Analysis Dataset.csv', header = TRUE) 
 # Applying the docVector function on each of the reviews 
 # Storing the matrix of word vectors as temp 
-temp <- t(sapply(text$SentimentText, docVectors)) 
-dim(temp)
+temp_amazon <- t(sapply(text_amazon$SentimentText, docVectors)) 
+dim(temp_amazon)
 ```
 
 ```{r, message=FALSE}
 # Splitting the dataset into train and test 
-temp_train <- temp[1:N_t,] 
-temp_test <- temp[(N_t+1):N,] 
-labels_train <- as.factor(as.character(text[1:N_t,]$Sentiment)) 
-labels_test <- as.factor(as.character(text[(N_t+1):N,]$Sentiment)) 
+temp_amazon_train <- temp_amazon[1:N_train_amazon,] 
+temp_amazon_test <- temp_amazon[(N_train_amazon+1):N_amazon,] 
+labels_amazon_train <- as.factor(as.character(text_amazon[1:N_train_amazon,]$Sentiment)) 
+labels_amazon_test <- as.factor(as.character(text_amazon[(N_train_amazon+1):N_amazon,]$Sentiment)) 
 library(randomForest) 
 # Training a model using random forest classifier with training dataset 
 # Observe that we are using 20 trees to create the model 
-rf_senti_classifier <- randomForest(temp_train, labels_train,ntree=20) 
-print(rf_senti_classifier)
+rf_amazon_senti_classifier <- randomForest(temp_amazon_train, labels_amazon_train, ntree=20) 
+print(rf_amazon_senti_classifier)
 ```
 
 ```{r, message=FALSE}
 # Making predictions on the dataset 
-rf_predicts <- predict(rf_senti_classifier, temp_test) 
+rf_amazon_predicts <- predict(rf_amazon_senti_classifier, temp_amazon_test) 
 library(rminer) 
-print(mmetric(rf_predicts, labels_test, c("ACC")))
+print(mmetric(rf_amazon_predicts, labels_amazon_test, c("ACC")))
 ```
 
 ## Drug Data
@@ -493,74 +514,79 @@ print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 ```
 
 # GloVe word embedding
+@pennington2014glove developed an extension of the word2vec method called Global Vectors for Word Representation (GloVe) for efficiently learning word vectors. 
+
+GloVe combines the global statistics of matrix factorization techniques, such as LSA, with the local context-based learning in word2vec. Also, unlike word2vec, rather than using a window to define local context, GloVe constructs an explicit word context or word co-occurrence matrix using statistics across the whole text corpus. As an effect, the learning model yields generally better word embeddings. 
+
+The "text2vec" package in R has a GloVe implementation that we could use to train to obtain word embeddings from our own training corpus. The following code block demonstrates how GloVe word embeddings can be created and used for sentiment analysis.
 ## Amazon reviews
 ```{r, message=FALSE}
 # Including the required library 
 library(text2vec) 
 # Reading the dataset 
-text <- read.csv(file='Sentiment Analysis Dataset.csv', header = TRUE) 
+text_amazon <- read.csv(file='Sentiment Analysis Dataset.csv', header = TRUE) 
 # Subsetting only the review text so as to create Glove word embedding 
-wiki <- as.character(text$SentimentText) 
+wiki_amazon <- as.character(text_amazon$SentimentText) 
 # Create iterator over tokens 
-tokens <- space_tokenizer(wiki) 
+tokens_amazon <- space_tokenizer(wiki_amazon) 
 # Create vocabulary. Terms will be unigrams (simple words). 
-it <- itoken(tokens, progressbar = FALSE) 
-vocab <- create_vocabulary(it) 
+it_amazon <- itoken(tokens_amazon, progressbar = FALSE) 
+vocab_amazon <- create_vocabulary(it_amazon) 
 # Consider a term in the vocabulary if and only if the term has appeared at least 
 # three times in the dataset 
-vocab <- prune_vocabulary(vocab, term_count_min = 3L) 
+vocab_amazon <- prune_vocabulary(vocab_amazon, term_count_min = 3L) 
 # Use the filtered vocabulary
-vectorizer <- vocab_vectorizer(vocab) 
+vectorizer_amazon <- vocab_vectorizer(vocab_amazon) 
 # Use window of 5 for context words and create a term co-occurance matrix 
-tcm <- create_tcm(it, vectorizer, skip_grams_window = 5L) 
+tcm_amazon <- create_tcm(it_amazon, vectorizer_amazon, skip_grams_window = 5L) 
 # Create the glove embedding for each in the vocab and 
 # the dimension of the word embedding should set to 50 
 # x_max is the maximum number of co-occurrences to use in the weighting function 
 glove <- GlobalVectors$new(rank = 50, x_max = 100)
-wv_main <- glove$fit_transform(tcm, n_iter = 10, convergence_tol = 0.01)
+wv_main_amazon <- glove$fit_transform(tcm_amazon, n_iter = 10, convergence_tol = 0.01)
 ```
 
 ```{r, message=FALSE}
 # Glove model learns two sets of word vectors - main and context. 
 # Both matrices may be added to get the combined word vector 
 wv_context <- glove$components 
-word_vectors <- wv_main + t(wv_context) 
+word_vectors_amazon <- wv_main_amazon + t(wv_context) 
 # Converting the word_vector to a dataframe for visualization 
-word_vectors <- data.frame(word_vectors) 
+word_vectors_amazon <- data.frame(word_vectors_amazon) 
 # The word for each embedding is set as row name by default 
 # Using the tibble library rownames_to_column function, the rownames is copied 
 # as first column of the dataframe 
 # We also name the first column of the dataframe as words 
 library(tibble) 
-word_vectors <- rownames_to_column(word_vectors, var = "words") 
+word_vectors_amazon <- rownames_to_column(word_vectors_amazon, var = "words") 
 ```
 
 ```{r, message=FALSE}
 library(softmaxreg) 
-docVectors = function(x) { wordEmbed(x, word_vectors, meanVec = TRUE) } 
+docVectors_amazon = function(x) { wordEmbed(x, word_vectors_amazon, meanVec = TRUE) } 
 # Applying the function docVectors function on the entire reviews dataset 
 # This will result in word embedding representation of the entire reviews dataset 
-temp <- t(sapply(text$SentimentText, docVectors)) 
+temp_amazon <- t(sapply(text_amazon$SentimentText, docVectors_amazon)) 
 ```
 
 ```{r, message=FALSE}
 # Splitting the dataset into train and test portions 
-temp_train <- temp[1:N_t,] 
-temp_test <- temp[(N_t+1):N,] 
-labels_train <- as.factor(as.character(text[1:N_t,]$Sentiment)) 
-labels_test <- as.factor(as.character(text[(N_t+1):N,]$Sentiment)) 
+temp_amazon_train <- temp_amazon[1:N_train_amazon,] 
+temp_amazon_test <- temp_amazon[(N_train_amazon+1):N_amazon,] 
+labels_amazon_train <- as.factor(as.character(text_amazon[1:N_train_amazon,]$Sentiment)) 
+labels_amazon_test <- as.factor(as.character(text_amazon[(N_train_amazon+1):N_amazon,]$Sentiment)) 
 # Using randomforest to build a model on train data 
 library(randomForest)
-rf_senti_classifier <- randomForest(temp_train, labels_train,ntree=20) 
-print(rf_senti_classifier)
+rf_amazon_senti_classifier <- randomForest(temp_amazon_train, labels_amazon_train,ntree=20) 
+print(rf_amazon_senti_classifier)
 ```
 
 ```{r, message=FALSE}
 # Predicting labels using the randomforest model created 
-rf_predicts <- predict(rf_senti_classifier, temp_test) 
+rf_amazon_predicts <- predict(rf_amazon_senti_classifier, temp_amazon_test) 
 # Estimating the accuracy from the predictions 
 library(rminer) 
-print(mmetric(rf_predicts, labels_test, c("ACC")))
+print(mmetric(rf_amazon_predicts, labels_amazon_test, c("ACC")))
 ```
 ## Drug Data
 ```{r, message=FALSE, echo=FALSE}
@@ -636,59 +662,59 @@ print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 ```{r, message=FALSE}
 library(fastTextR) 
 # Input reviews file 
-text <- readLines("Sentiment Analysis Dataset_ft.txt") 
+text_amazon <- readLines("Sentiment Analysis Dataset_ft.txt") 
 ```
 
 ```{r}
 # Dividing the reviews into training and test 
-temp_train <- text[1:N_t]
-temp_test <- text[(N_t+1):N] 
+temp_amazon_train <- text_amazon[1:N_train_amazon]
+temp_amazon_test <- text_amazon[(N_train_amazon+1):N_amazon] 
 ```
 
 ```{r}
 # Creating txt file for train and test dataset 
 fileConn <- file("train.ft.txt") 
-writeLines(temp_train, fileConn) 
+writeLines(temp_amazon_train, fileConn) 
 close(fileConn) 
 fileConn <- file("test.ft.txt") 
-writeLines(temp_test, fileConn) 
+writeLines(temp_amazon_test, fileConn) 
 close(fileConn) 
 # Creating a test file with no labels 
-temp_test_nolabel <- gsub("__label__1", "", temp_test, perl=TRUE) 
-temp_test_nolabel <- gsub("__label__2", "", temp_test_nolabel, perl=TRUE)
+temp_amazon_test_nolabel <- gsub("__label__1", "", temp_amazon_test, perl=TRUE) 
+temp_amazon_test_nolabel <- gsub("__label__2", "", temp_amazon_test_nolabel, perl=TRUE)
 ```
 
 ```{r}
 fileConn <- file("test_nolabel.ft.txt") 
-writeLines(temp_test_nolabel, fileConn) 
+writeLines(temp_amazon_test_nolabel, fileConn) 
 close(fileConn) 
 # Training a supervised classification model with training dataset file 
-model <- ft_train("train.ft.txt", method = "supervised", 
+model_amazon <- ft_train("train.ft.txt", method = "supervised", 
                 control = ft_control(nthreads = 3L, seed = 1)) 
 # Obtain all the words from a previously trained model
-words <- ft_words(model) 
+words_amazon <- ft_words(model_amazon) 
 ```
 
 ```{r}
 # Obtain word vectors from a previously trained model. 
-word_vec <- ft_word_vectors(model, words) 
+word_vec_amazon <- ft_word_vectors(model_amazon, words_amazon) 
 ```
 
 ```{r, message=FALSE}
 # Predicting the labels for the reviews in the no labels test dataset 
 # Getting the predictions into a dataframe so as to compute performance measurement
-ft_preds <- ft_predict(model, newdata = temp_test_nolabel) 
+ft_preds_amazon <- ft_predict(model_amazon, newdata = temp_amazon_test_nolabel) 
 # Reading the test file to extract the actual labels 
-reviewstestfile <- readLines("test.ft.txt") 
+reviewstestfile_amazon <- readLines("test.ft.txt") 
 # Extracting just the labels frm each line 
 library(stringi) 
-actlabels <- stri_extract_first(reviewstestfile, regex="\\w+") 
+actlabels_amazon <- stri_extract_first(reviewstestfile_amazon, regex="\\w+") 
 # Converting the actual labels and predicted labels into factors 
-actlabels <- as.factor(as.character(actlabels)) 
-ft_preds <- as.factor(as.character(ft_preds$label)) 
+actlabels_amazon <- as.factor(as.character(actlabels_amazon)) 
+ft_preds_amazon <- as.factor(as.character(ft_preds_amazon$label)) 
 # Getting the estimate of the accuracy 
 library(rminer) 
-print(mmetric(actlabels, ft_preds, c("ACC")))
+print(mmetric(actlabels_amazon, ft_preds_amazon, c("ACC")))
 ```
 
 ## Drug Data
@@ -765,3 +791,6 @@ print(mmetric(actlabels_Drug, ft_preds_Drug, c("ACC")))
 
 
 
+
+
+# References
