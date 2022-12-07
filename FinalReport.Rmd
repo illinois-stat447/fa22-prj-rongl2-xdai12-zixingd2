@@ -13,22 +13,18 @@ nocite: '@*'
 ```
 # Introduction
 
-Machine learning techniques have become increasingly popular and relevant to solve text and sentiment related problems in recent years. It has boosted performance on several tasks and significantly reduced the necessity for human efforts. For this project, we focused on text classification, especially sentiment analysis, on two datasets, *Amazon Review* and *Drug Review*. While the *Amazon Review* dataset is popular and was being used for many research paper and projects, we adapted four classic text sentiment classifiers
-on the dataset to see if obtained the 
+Machine learning techniques have become increasingly popular and relevant to solve text and sentiment-related problems in recent years. It has boosted performance on several tasks and significantly reduced the necessity for human efforts. For this project, we focused on text classification, especially sentiment analysis, on two datasets, *Amazon Review* and *Drug Review*. While the *Amazon Review* dataset is popular and was being used for many research papers and projects, we decided to replicate the code of four classic machine learning models from existing literature and adapted them to a newer but less popular dataset we found in the UCI Machine Learning Repository. Our goal for the project is to compare classifiers including \verb|BoW|, \verb|Word2Vec|, \verb|GloVe|, \verb|fastText| for two different datasets. 
 
-Since there are researches about sentiment analysis on Amazon Review dataset, we will first use the same methods on the same dataset, and then replicate the methods on datasets other than the Amazon Reviews dataset. By completing the project, we are trying to realize the following goals:
+# Dataset Overview & Preporcess
+For the *Amazon Review* dataset, we used the same dataset mentioned by @AmazonData, which was obtained from the link provided by @rCode^[Google Drive Link: https://drive.google.com/drive/u/0/folders/0Bz8a_Dbh9Qhbfll6bVpmNUtUcFdjYmF2SEpmZUZUcVNiMUw1TWN6RDV3a0JHT3kxLVhVR2M]. The dataset contains about 1,800,000 training samples and 200,000 testing samples with three attributes, which are classification labels (1 for negative reviews and 2 for positive reviews), the title of each review text, and the review text body. Due to the limit of computer computation ability, we pulled out the first 100,000 data samples and split 80% of the data into the training set and 20% of the data into the testing set. Below are the head rows from the data:
+``` {r amazon head}
+```
+For the Drug dataset, we downloaded from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Drug+Review+Dataset+%28Drugs.com%29). The dataset has 215,063 samples with 6 attributes, including \verb|drugName|, \verb|condition|, \verb|review|, \verb|rating| (1 to 10), \verb|date|, \verb|usefulCount|. Similar to *Amazon Review* dataset, we split the whole dataset into training (80%) and testing (20%) datasets. In order to replicate the code, we categorized the dataset into two labels, where \verb|rating|s range from [need to be filled] are categorized as [1(negative) or 2(positive)] and the rest is categorized as []. Moreover, we only retained three columns (i.e., \verb|review|, \verb|rating|, [\verb|condition|]) to make the dataset have the same format as *Amazon Review*. Below are the head rows of the preprocessed data:
+``` {r drug head}
+```
 
--   Build four text sentiment classifiers on Amazon Reviews dataset (\verb|BoW|, \verb|Word2Vec|, \verb|GloVe|, \verb|fastText|);
 
--   Re-apply the above four classifiers on different datasets;
 
--   Compare different classifiers on different datasets.
-
-\\
-
-test456[@R-base]
-
-citation sample: test123 @rCode
 
 # References
 
