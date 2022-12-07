@@ -25,6 +25,9 @@ For the Drug dataset, we downloaded from the [UCI Machine Learning Repository](h
 
 
 
+# Model 1: Bag of Words with Naive Bayes algorithm
+Bag of Words (BoW) method is widely used in NLP and computer vision fields. It takes the occurrence of each word in the text regardless of grammar and makes it into “bags” to characterize the text. To implement BoW method for our dataset, *Amazon Review* and Drug dataset, we first use \verb|VCorpus| function and \verb|DocumentTermMatrix| function in the \verb|tm| package to convert text into a matrix. By adjusting the built-in parameter in the  \verb|DocumentTermMatrix|, we do not have to worry about cleaning the dataset with stop words and punctuation. In order to make the model more precise, we removed words that do not occur in 99% of the documents by using \verb|removeSparseTerms| function. After finishing the process of BoW conversion, we followed @rCode and used the Naive Bayes sentiment classifier to perform predictions. Utilizing the \verb|nb_sent_classifier| in the \verb|e1071| package, we obtained the prediction results with [accuracy] for *Amazon Review* data and [accuracy] for Drug data.  
+
 
 # References
 
