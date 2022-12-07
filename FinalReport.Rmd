@@ -1,0 +1,63 @@
+---
+title: "Final Report"
+output: pdf_document
+date: "`r Sys.Date()`"
+bibliography: References.bib
+nocite: '@*'
+---
+
+```{=tex}
+\newpage 
+\tableofcontents 
+\newpage
+```
+# Introduction
+
+Machine learning techniques have become increasingly popular and relevant to solve text and sentiment related problems in recent years. It has boosted performance on several tasks and significantly reduced the necessity for human efforts. For this project, we focused on text classification, especially sentiment analysis, on two datasets, *Amazon Review* and *Drug Review*. While the *Amazon Review* dataset is popular and was being used for many research paper and projects, we adapted four classic text sentiment classifiers
+on the dataset to see if obtained the 
+
+Since there are researches about sentiment analysis on Amazon Review dataset, we will first use the same methods on the same dataset, and then replicate the methods on datasets other than the Amazon Reviews dataset. By completing the project, we are trying to realize the following goals:
+
+-   Build four text sentiment classifiers on Amazon Reviews dataset (\verb|BoW|, \verb|Word2Vec|, \verb|GloVe|, \verb|fastText|);
+
+-   Re-apply the above four classifiers on different datasets;
+
+-   Compare different classifiers on different datasets.
+
+\\
+
+test456[@R-base]
+
+citation sample: test123 @R-base
+
+# References
+
+<!-- ```{r setup, include=FALSE} -->
+
+<!-- knitr::opts_chunk$set(echo = TRUE) -->
+
+<!-- ``` -->
+
+<!-- ## R Markdown -->
+
+<!-- This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>. -->
+
+<!-- When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this: -->
+
+<!-- ```{r cars} -->
+
+<!-- summary(cars) -->
+
+<!-- ``` -->
+
+<!-- ## Including Plots -->
+
+<!-- You can also embed plots, for example: -->
+
+<!-- ```{r pressure, echo=FALSE} -->
+
+<!-- plot(pressure) -->
+
+<!-- ``` -->
+
+<!-- Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot. -->
