@@ -31,8 +31,8 @@ ftext = readLines("Dataset/Sentiment Analysis Dataset_ft.txt")
 temp_train=ftext[1:800]
 temp_test=ftext[801:1000]
 # Viewing the train datasets for confirmation
-View(temp_train)
-View(temp_test)
+# View(temp_train)
+# View(temp_test)
 
 
 # creating txt file for train and test dataset
@@ -51,16 +51,32 @@ temp_test_nolabel<- gsub("__label__2", "", temp_test_nolabel, perl=TRUE)
 fileConn<-file("Dataset/test_nolabel_ft.txt") 
 writeLines(temp_test_nolabel, fileConn)
 close(fileConn)
-# training a supervised classification model with training dataset file 
-model<-ft_train("Dataset/train_ft.txt", method = "supervised", control = ft_control(nthreads = 3L))
+# training a supervised classification model with training dataset file
+# ctrl = ft_control(learning_rate = 0.1,
+#                   word_vec_size = 10L,
+#                   epoch = 5L,
+#                   min_count = 1L,
+#                   max_len_ngram = 2L,
+#                   nbuckets = 10000000L,
+#                   nthreads = 4L,
+#                   seed = 0L)
+ctrl <- ft_control(learning_rate = 0.15,
+                   word_vec_size = 10L,
+                   epoch = 5L,
+                   min_count = 1L,
+                   max_len_ngram = 2L,
+                   nbuckets = 10000000L,
+                   nthreads = 3L,
+                   seed = 0L)
+model<-ft_train("Dataset/train_ft.txt", method = "supervised", control = ctrl)
 # Obtain all the words from a previously trained model=
-words<-ft_words(model)
-# viewing the words for confirmation. These are the set of words present in our training data
-View(words)
-
-
-word_vec<-ft_word_vectors(model, words)
-View(word_vec)
+# words<-ft_words(model)
+# # viewing the words for confirmation. These are the set of words present in our training data
+# View(words)
+# 
+# 
+# word_vec<-ft_word_vectors(model, words)
+# View(word_vec)
 
 # predicting the labels for the reviews in the no labels test dataset
 # and writing it to a file for future reference
@@ -76,12 +92,12 @@ actlabels<-stri_extract_first(reviewstestfile, regex="\\w+")
 # converting the actual labels and predicted labels into factors 
 actlabels<-as.factor(as.character(actlabels)) 
 ft_preds_labels <-as.factor(as.character(ft_preds$label))
- # getting the estimate of the accuracy
+# getting the estimate of the accuracy
 library(rminer)
 print(mmetric(actlabels, ft_preds, c("ACC")))
+ft_test(model, "Dataset/test_ft.txt")
 
-
-
-
-
-
+        
+        
+        
+        
