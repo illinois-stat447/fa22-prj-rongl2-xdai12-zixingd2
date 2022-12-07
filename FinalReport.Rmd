@@ -28,7 +28,7 @@ Since there are researches about sentiment analysis on Amazon Review dataset, we
 
 test456[@R-base]
 
-citation sample: test123 @R-base
+citation sample: test123 @rCode
 
 # References
 
