@@ -60,13 +60,13 @@ close(fileConn)
 #                   nbuckets = 10000000L,
 #                   nthreads = 4L,
 #                   seed = 0L)
-ctrl <- ft_control(learning_rate = 0.15,
+ctrl <- ft_control(learning_rate = 1.9,
                    word_vec_size = 10L,
                    epoch = 5L,
                    min_count = 1L,
                    max_len_ngram = 2L,
                    nbuckets = 10000000L,
-                   nthreads = 3L,
+                   nthreads = 2L,
                    seed = 0L)
 model<-ft_train("Dataset/train_ft.txt", method = "supervised", control = ctrl)
 # Obtain all the words from a previously trained model=
@@ -95,6 +95,7 @@ ft_preds_labels <-as.factor(as.character(ft_preds$label))
 # getting the estimate of the accuracy
 library(rminer)
 print(mmetric(actlabels, ft_preds, c("ACC")))
+ft_test(model, "Dataset/train_ft.txt")
 ft_test(model, "Dataset/test_ft.txt")
 
         
