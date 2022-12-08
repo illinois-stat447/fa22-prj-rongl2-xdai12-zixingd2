@@ -37,7 +37,15 @@ knitr::opts_chunk$set(echo = FALSE)
   - *Drug Review* dataset: 78.96%
 
 
-## Slide with Bullets
+## Conclusion & Discussion
+
+- Results in glance:
+
+                   Bow    word2vec    GloVe   FastText 
+--------------- -------- ----------- ------- 
+ Amazon Review   81.19%   62.88%
+  Drug Review    74.77% 
+   
 
 -   Bullet 1
 -   Bullet 2
