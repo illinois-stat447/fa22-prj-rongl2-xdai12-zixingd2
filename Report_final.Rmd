@@ -22,7 +22,7 @@ In recent years, machine learning techniques have become increasingly popular an
 
 For the *Amazon Review* dataset, we use the dataset constructed and made available by @zhang2015character. The dataset contains about 1,800,000 training samples and 200,000 testing samples with three attributes, which are classification labels (1 for negative reviews and 2 for positive reviews), the title of each review text, and the review text body. Due to the limit of computer computation ability, we pulled out the first 100,000 data samples and split 80% of the data into the training set and 20% of the data into the testing set. 
 
-For the Drug dataset, we downloaded from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Drug+Review+Dataset+%28Drugs.com%29). The dataset has 215,063 samples with 6 attributes, including \verb|drugName|, \verb|condition|, \verb|review|, \verb|rating| (1 to 10), \verb|date|, \verb|usefulCount|. Similar to *Amazon Review* dataset, we split the whole dataset into training (80%) and testing (20%) datasets. In order to replicate the code, we categorized the dataset into two labels, where \verb|rating|s range from [1 to 4] are categorized as [1(negative)] and the \verb|rating|s range from [7 to 10] are categorized as [2(positive)]. We combined the text columns together and removed symbols that are not a number or a word. Moreover, we only retained the columns of \verb|rating| and merged columns of \verb|review|, \verb|name|, \verb|condition| as one text body attribute. Hence our drug dataset has the same format as *Amazon Review*. 
+For the Drug dataset, we downloaded from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Drug+Review+Dataset+%28Drugs.com%29). The dataset has 215,063 samples with 6 attributes, including drugName, condition, review, rating (1 to 10), date, usefulCount. Similar to *Amazon Review* dataset, we split the whole dataset into training (80%) and testing (20%) datasets. In order to replicate the code, we categorized the dataset into two labels, where rating range from [1 to 4] are categorized as [1(negative)] and the rating range from [7 to 10] are categorized as [2(positive)]. We combined the text columns together and removed symbols that are not a number or a word. Moreover, we only retained the columns of rating and merged columns of review, name, condition as one text body attribute. Hence our drug dataset has the same format as *Amazon Review*. 
 
 ## Dataset Prepossessing
 
@@ -51,6 +51,7 @@ reviews_amazon <- separate(data = reviews_amazon, col = reviews_amazon,
 Here we got the data before prepossessing.
 
 ![Head rows of the data before prepossessing](before.png){width=60%}
+
 Since the unnecessary punctuation may cause the problem for our sentiment analysis, we remove the punctuation with the following code:
 
 ```{r}
@@ -69,7 +70,8 @@ write.table(reviews_amazon,file = "Sentiment Analysis Dataset.csv",row.names = F
 This will give us the following output:
 
 ![Head rows of the data after prepossessing](after.png){width=60%}
-Since The fastText algorithm expects the dataset to be in a format: "__label__<x> <text>", where x is the class name and text is the review text, we need to transform our data format as required.
+
+Since The fastText algorithm expects the dataset to be in a format: __ label __ \text{<x> <text>}, where x is the class name and text is the review text, we need to transform our data format as required.
 
 ```{r}
 reviews_amazon <- readLines('amazon_review_polarity_csv/train.csv', n = N_amazon)
@@ -110,8 +112,6 @@ reviews_text_Drug <- separate(data = reviews_text_Drug, col = reviews_text_Drug,
                             into = c("Sentiment", "SentimentText"), sep = 4)
 reviews_text_Drug <- reviews_text_Drug[-1,]
 N_Drug <- N_Drug - 1
-# Head rows of the data:
-head(reviews_text_Drug)
 ```
 
 ```{r, echo=FALSE}
@@ -174,30 +174,30 @@ close(fileConn)
 
 
 # BoW approach with naive bayes
+
+Bag of Words (BoW) method is widely used in NLP and computer vision fields. It takes the occurrence of each word in the text regardless of grammar and makes it into “bags” to characterize the text. To implement BoW method for our dataset, *Amazon Review* and *Drug Review*, we first use \verb|VCorpus| function and \verb|DocumentTermMatrix| function in the \verb|tm| package to convert text into a Document Term Matrix (DTM). By adjusting the built-in parameter in the  \verb|DocumentTermMatrix| function, we do not have to worry about cleaning the dataset with stop words. In order to make the model more precise, we removed words that do not occur in 99% of the documents by using \verb|removeSparseTerms| function. 
+
+After finishing the process of BoW conversion, we can use the DTM to create word clouds for both positive and negative sentiment cases. And also to better interpret our word cloud, we simply use the two-sample t-test to better discriminant our words. Finally, we followed @rCode and used the Naive Bayes sentiment classifier to perform predictions. Utilizing the \verb|nb_sent_classifier| in the \verb|e1071| package, we obtained the prediction results with approximate **81.19%** for *Amazon Review* data and **74.77%** for *Drug Review*.  
+
 ## Amazon reviews
 ```{r, message=FALSE}
 library(SnowballC) 
 library(tm) 
 # Reading the transformed file as a dataframe 
 text_amazon <- read.table(file='Sentiment Analysis Dataset.csv', sep=',', header = TRUE) 
-# Checking the dataframe to confirm everything is in tact 
-print(dim(text_amazon)) 
-```
 
-```{r}
 # Transforming the text into volatile corpus 
 amazon_corp <- VCorpus(VectorSource(text_amazon$SentimentText)) 
-print(amazon_corp)
 ```
 
 ```{r}
-# Creating document term matrix 
+# Creating document term matrix (DTM)
 dtm_amazon <- DocumentTermMatrix(amazon_corp, control = list( tolower = TRUE, 
    removeNumbers = TRUE, stopwords = TRUE, removePunctuation = TRUE, stemming = TRUE)) 
 # Basic EDA on dtm 
 inspect(dtm_amazon)
 ```
-
+We see that the DTM is 100% sparse. Since the DTM tends to get very big, we removed sparse terms, that is, terms occurring only in very few documents, and tried to reduce the size of the matrix without losing significant relations inherent to the matrix.
 ```{r}
 # Removing sparse terms 
 dtm_amazon = removeSparseTerms(dtm_amazon, 0.99) 
@@ -205,7 +205,7 @@ inspect(dtm_amazon)
 ```
 
 
-We found that some of the selected terms are difficult to interpret. So we decided to first filter out a vocab with words that we can interpret. We used a simple screening method, which we described in discriminant analysis before:  two-sample t-test. Assume we have one-dimensional observations from two groups
+Using the DTM, we can create word clouds for better understanding for our sentiment text. However, we found that some of the selected words are difficult to interpret. So we decided to first filter out a vocab with words that we can interpret. We used a simple screening method, which we described in discriminant analysis before:  two-sample t-test. Assume we have one-dimensional observations from two groups
 
 $$X_{1}, X_{2}, \dots, X_{m}, \quad Y_{1}, Y_{2}, \dots, Y_{n}X$$
 
@@ -240,7 +240,9 @@ n0 = n - n1
 myp = (summ[,1] - summ[,3])/
   sqrt(summ[,2]/n1 + summ[,4]/n0)
 ```
+
 We ordered words by the magnitude of their t-statistics, which are then divided into two lists: positive words and negative words.
+
 ```{r}
 words = colnames(dtm_amazon)
 id = order(abs(myp), decreasing=TRUE)
@@ -249,7 +251,9 @@ posvalue = myp[id][myp[id]>0][1:50]
 neg.list = words[id[myp[id]<0]]
 negvalue = myp[id][myp[id]<0][1:50]
 ```
-Using the "wordcloud" package to plot the Word Cloud for most represent words, both positive and negative.
+
+Using the \verb|wordcloud| package to plot the Word Cloud for most represent words, both positive and negative.
+
 ```{r, message=FALSE, fig.show='hide', warning=FALSE}
 # Word Cloud for positive words
 library(wordcloud)
@@ -259,6 +263,7 @@ wordcloud(words = pos.list[1:50], freq = posvalue, scale=c(6,.2), min.freq = 5,
 wordcloud(words = neg.list[1:50], freq = abs(negvalue), scale=c(4.3,.2), min.freq = 5, 
           random.order=FALSE, rot.per=0.35, colors = brewer.pal(8, "Dark2"))
 ```
+
 
 ```{r, message=FALSE}
 library(png)
@@ -275,7 +280,7 @@ title("Word Clouds from Amazon reviews", line = -22, outer = TRUE)
 ```
 
 
-
+Then, we continue using the DTM that to training with machine learning classification. We divide our DTM into training (80%) and testing (20%) datasets.
 
 ```{r}
 # Splitting the train and test DTM 
@@ -285,16 +290,18 @@ dtm_amazon_train_labels <- as.factor(as.character(text_amazon[1:N_train_amazon, 
 dtm_amazon_test_labels <- as.factor(as.character(text_amazon[(N_train_amazon+1):N_amazon, ]$Sentiment))
 ```
 
+Here we use Naive Bayes to create a classifier. Since Naive Bayes is generally trained on data with nominal features, DTM need to be converted to nominal prior to feeding the dataset as input for creating the model with Naive Bayes.
+
 ```{r}
 # Convert the cell values with a non-zero value to Y, and in case of a zero we convert it to N
 cellconvert<- function(x) { x <- ifelse(x > 0, "Y", "N") }
-```
 
-```{r}
 # Applying the function to rows in training and test datasets 
 dtm_amazon_train <- apply(dtm_amazon_train, MARGIN = 2,cellconvert) 
 dtm_amazon_test <- apply(dtm_amazon_test, MARGIN = 2,cellconvert) 
 ```
+
+Then, we proceed to build a text sentiment analysis classifier using the Naive Bayes algorithm from the \verb|e1071| package.
 
 ```{r, message=FALSE}
 # Training the naive bayes classifier on the training dtm 
@@ -304,12 +311,12 @@ nb_amazon_senti_classifier <- naiveBayes(dtm_amazon_train,dtm_amazon_train_label
 summary(nb_amazon_senti_classifier)
 ```
 
-```{r}
-# Making predictions on the test data dtm 
-nb_amazon_predicts <- predict(nb_amazon_senti_classifier, dtm_amazon_test, type="class") 
-```
+Finally, we used the model object to predict sentiment on the test data DTM.
 
 ```{r, message=FALSE}
+# Making predictions on the test data dtm 
+nb_amazon_predicts <- predict(nb_amazon_senti_classifier, dtm_amazon_test, type="class") 
+
 # Computing accuracy of the model 
 library(rminer) 
 print(mmetric(nb_amazon_predicts, dtm_amazon_test_labels, c("ACC")))
@@ -526,11 +533,12 @@ print(mmetric(rf_predicts_Drug, labels_test_Drug, c("ACC")))
 ```
 
 # GloVe word embedding
-@pennington2014glove developed an extension of the word2vec method called Global Vectors for Word Representation (GloVe) for efficiently learning word vectors. 
+@pennington2014glove developed an extension of the \verb|word2vec| method called \verb|GloVe Vectors| for Word Representation (\verb|GloVe|) for efficiently learning word vectors. 
 
-GloVe combines the global statistics of matrix factorization techniques, such as LSA, with the local context-based learning in word2vec. Also, unlike word2vec, rather than using a window to define local context, GloVe constructs an explicit word context or word co-occurrence matrix using statistics across the whole text corpus. As an effect, the learning model yields generally better word embeddings. 
+\verb|GloVe| combines the global statistics of matrix factorization techniques, such as LSA, with the local context-based learning in \verb|word2vec|. Also, unlike \verb|word2vec|, rather than using a window to define local context, \verb|GloVe| constructs an explicit word context or word co-occurrence matrix using statistics across the whole text corpus. As an effect, the learning model yields generally better word embeddings. 
 
-The "text2vec" package in R has a GloVe implementation that we could use to train to obtain word embeddings from our own training corpus. The following code block demonstrates how GloVe word embeddings can be created and used for sentiment analysis.
+The \verb|text2vec| package in R has a \verb|GloVe| implementation that we could use to train to obtain word embeddings from our own training corpus. The following code block demonstrates how \verb|GloVe| word embeddings can be created and used for sentiment analysis.
+
 ## Amazon reviews
 ```{r, message=FALSE}
 # Including the required library 
@@ -804,5 +812,6 @@ print(mmetric(actlabels_Drug, ft_preds_Drug, c("ACC")))
 
 
 
+# Conclusion & Discussion
 
 # References
