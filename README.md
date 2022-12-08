@@ -10,8 +10,8 @@ Machine learning techniques have become increasingly popular and relevant to sol
 
 ## Group Member & Peer Evaluation
 
-rongl2: data preprocessing, visualization, apply word2vec on Amazon review and Drug review data
+rongl2: data preprocessing, visualization, apply word2vec on Amazon review and Drug review dataset
 
 xdai12: 
 
-zixingd2: 
+zixingd2: BoW and FastText on Amazon review and Drug review dataset
