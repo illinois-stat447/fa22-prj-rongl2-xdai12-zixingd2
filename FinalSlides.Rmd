@@ -1,0 +1,56 @@
+---
+title: "Sentiment Analysis for Amazon Review Dataset and its replications"
+author: "Rong Li, Xiongjie Dai, Zixing Deng"
+output: 
+  beamer_presentation: default
+  ioslides_presentation: 
+    css: style.css
+    transition: 0
+    widescreen: yes
+date: "2022-12-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Model 4: FastText word Embedding
+
+- fastText: breaking words into n-grams (subwords), and generating word embeddings by taking the sum of those subwords
+
+  - e.g. 2-grams for word *help* will be "he, el, lp"
+
+- `fastTextR` package:
+
+  - `ft_control`: set hyperparameter for fastText
+
+  - `ft_train`: train the model
+
+  - `ft_predict`: predict values based on the trained model
+  
+  - `ft_test`: evaluate the model
+
+- Final results:
+
+  - *Amazon Review* dataset: 86.48%
+  
+  - *Drug Review* dataset: 78.96%
+
+
+## Slide with Bullets
+
+-   Bullet 1
+-   Bullet 2
+-   Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
