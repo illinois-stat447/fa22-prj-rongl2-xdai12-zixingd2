@@ -1,0 +1,70 @@
+---
+title: "Sentiment Analysis for Amazon Review Dataset and its replications"
+author: "Rong Li, Xiongjie Dai, Zixing Deng"
+output: 
+  beamer_presentation: default
+  ioslides_presentation: 
+    css: style.css
+    transition: 0
+    widescreen: yes
+date: "2022-12-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+## Model 1: Bag of Words(BoW) with Naive Bayes
+
+- BoW: widely used in NLP and computer vision fields. It takes the occurrence of each word in the text regardless of grammar and makes it into “bags” to characterize the text.
+
+![Word Cloud for Amazon Review Data](https://github.com/illinois-stat447/fa22-prj-rongl2-xdai12-zixingd2/blob/rongl2/wordcloud.jpg)
+
+
+## Model 4: FastText word Embedding
+
+- fastText: breaking words into n-grams (subwords), and generating word embeddings by taking the sum of those subwords
+
+  - e.g. 2-grams for word *help* will be "he, el, lp"
+
+- `fastTextR` package:
+
+  - `ft_control`: set hyperparameter for fastText
+
+  - `ft_train`: train the model
+
+  - `ft_predict`: predict values based on the trained model
+  
+  - `ft_test`: evaluate the model
+
+- Final results:
+
+  - *Amazon Review* dataset: 86.48%
+  
+  - *Drug Review* dataset: 78.96%
+
+
+## Conclusion & Discussion
+
+- Results in glance:
+
+                   Bow    word2vec    GloVe   FastText 
+--------------- -------- ----------- ------- 
+ Amazon Review   81.19%   62.88%
+  Drug Review    74.77% 
+   
+
+-   Bullet 1
+-   Bullet 2
+-   Bullet 3
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
