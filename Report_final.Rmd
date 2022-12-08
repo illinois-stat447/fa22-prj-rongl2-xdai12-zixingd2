@@ -214,7 +214,7 @@ to test whether the X population and the Y population have the same mean, we com
 
 where $s_X^2$ denotes the sample variance of X.
 
-Again, we used the training data from the first split. Since dtm_train is a large sparse matrix, we used commands from the R package \verb|slam| to efficiently compute the mean and var for each column of dtm_train.
+Again, we used the training data from the first split. Since dtm_amazon is a large sparse matrix, we used commands from the R package \verb|slam| to efficiently compute the mean and var for each column of dtm_amazon.
 ```{r}
 # Word Cloud preparing
 v.size = dim(dtm_amazon)[2]
@@ -694,7 +694,6 @@ labels_test_Drug <- as.factor(as.character(text_Drug[(N_train_Drug+1):N_Drug,]$S
 # Using randomforest to build a model on train data 
 library(randomForest)
 rf_senti_classifier_Drug <- randomForest(temp_train_Drug, labels_train_Drug,ntree=20) 
-print(rf_senti_classifier_Drug)
 ```
 
 The accuracy for testing *Drug Review* is
