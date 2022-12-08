@@ -29,6 +29,20 @@ For the Drug dataset, we downloaded from the [UCI Machine Learning Repository](h
 Bag of Words (BoW) method is widely used in NLP and computer vision fields. It takes the occurrence of each word in the text regardless of grammar and makes it into “bags” to characterize the text. To implement BoW method for our dataset, *Amazon Review* and Drug dataset, we first use \verb|VCorpus| function and \verb|DocumentTermMatrix| function in the \verb|tm| package to convert text into a matrix. By adjusting the built-in parameter in the  \verb|DocumentTermMatrix|, we do not have to worry about cleaning the dataset with stop words and punctuation. In order to make the model more precise, we removed words that do not occur in 99% of the documents by using \verb|removeSparseTerms| function. After finishing the process of BoW conversion, we followed @rCode and used the Naive Bayes sentiment classifier to perform predictions. Utilizing the \verb|nb_sent_classifier| in the \verb|e1071| package, we obtained the prediction results with [accuracy] for *Amazon Review* data and [accuracy] for Drug data.  
 
 
+# Model 4: FastText word embedding 
+As an extension of \verb|word2vec|, \verb|fastTextR| package is used to reach more concise predictions for the analysis. Created and open-sourced by Facebook in 2016 [@fastText], fastText is a more powerful tool to classify text and learn word vector representation by breaking words into character n-grams. Before training the model, we convert the label in the dataset from “\\\1\\\” into “__label__1” in order to meet the format of the fastText algorithm. We also cleaned all multiple spaces in the text with a single space. Thereupon, we used \verb|ft_train| function to train the model and \verb|ft_control| to tune the hyper-parameter for our two datasets. Our best accuracy for the fastText model is **86.48** for the *Amazon Review Dataset* and **78.69%** for the Drug dataset. 
+
+
+
+# Conclusion & Discussion
+In conclusion, comparing all of our models after fine-tuning, the fastText model performs best on the *Amazon Review Dataset* with **86.48%** of accuracy and the Drug dataset with **78.69%** of accuracy. Since words passed by the fastText model are represented as the sum of each word’s bag of character n-grams, fastText is much more efficient to deal with large corpus and compute word embeddings for words unseen from the training set [@whyFT]. With such features, fastText can cope with typos and different word tenses accordingly without treating them as different words. For example, “helped” and “help” are two same words but only different from tenses. However, models other than fastText may treat them as two different words and assign the wrong labels. Therefore, using fastText can significantly boost performance. 
+
+From the entire scope, the word2vec model performs with relatively low accuracy for both models (62.88% for *Amazon Review* and 71.02% for Drug). One possible reason will be the existing embedding in the \verb|word2vec|, which treats all unknown words as zero vectors. Thus, we may want to try to create and train word embedding on our own using CBOW and Continuous Skip-Gram in the future to see if any improvements will be made.
+
+For future investigation, we can try to use BERT to better process the dataset and attempt more classification algorithms, such as XGBoost and AdaBoost, to classify the sentence embeddings. Moreover, as we only split our data into train and test datasets with 80-20, we may want to split the test set further into 10% of the validation dataset and 10% of the testing dataset so that we can select more fitting hyperparameters for the model and realize higher accuracy [@validSet]. 
+
+
+
 # References
 
 <!-- ```{r setup, include=FALSE} -->
