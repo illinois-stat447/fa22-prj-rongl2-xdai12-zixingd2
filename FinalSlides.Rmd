@@ -1,5 +1,5 @@
 ---
-title: "Sentiment Analysis for Amazon Review Dataset and its replications"
+title: "Sentiment Analysis for Amazon Review Dataset & Drug Dataset"
 author: "Rong Li, Xiongjie Dai, Zixing Deng"
 output: 
   beamer_presentation: default
@@ -9,6 +9,7 @@ output:
     widescreen: yes
 date: "2022-12-08"
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -41,24 +42,20 @@ knitr::opts_chunk$set(echo = FALSE)
 
 - Results in glance:
 
-                   Bow    word2vec    GloVe   FastText 
---------------- -------- ----------- ------- 
- Amazon Review   81.19%   62.88%
-  Drug Review    74.77% 
-   
+                      Bow         word2vec      GloVe         FastText 
+----------------- ----------- --------------- ----------    ------------
+ Amazon Review      81.19%        62.88%        71.99%         86.48%
+  Drug Review       74.77%        71.02%        74.83%         78.69%
 
--   Bullet 1
--   Bullet 2
--   Bullet 3
+- Possible improvements for `word2vec`:
 
-## Slide with R Output
+  - create specific word embeddings for the dataset to minimize the effect of pre-trained embeddings
+  
+- Future directions:
 
-```{r cars, echo = TRUE}
-summary(cars)
-```
+  - try more classification models such as XGBoost and AdaBoost
+  
+  - split the dataset into train, validation, test subsets
 
-## Slide with Plot
 
-```{r pressure}
-plot(pressure)
-```
+# Thank you! 
