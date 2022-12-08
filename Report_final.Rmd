@@ -13,15 +13,25 @@ bibliography: references.bib
 \newpage
 
 # Introduction
+
 In recent years, machine learning techniques have become increasingly popular and relevant to solving text and sentiment-related problems. It has boosted performance on several tasks and significantly reduced the necessity for human efforts. For this project, we focused on text classification, especially sentiment analysis, on two datasets, *Amazon Review* and *Drug Review*. Although the *Amazon Review* dataset is popular and was being used for many research papers and projects, most code works were carried out using Python. Therefore, we decided to explore more on implementing four classic Natural Language Processing (NLP) methods using R packages. We first replicated the R code from existing literature for the *Amazon Review* dataset. We adapted them to a newer but less popular UCI Machine Learning Repository dataset. Our goal for the project is to compare classifiers, including \verb|BoW|, \verb|Word2Vec|, \verb|GloVe|, \verb|fastText| for two different datasets. 
 
 # Data 
-## Dataset Overview  
+
+## Dataset Overview 
+
 For the *Amazon Review* dataset, we use the dataset constructed and made available by @zhang2015character. The dataset contains about 1,800,000 training samples and 200,000 testing samples with three attributes, which are classification labels (1 for negative reviews and 2 for positive reviews), the title of each review text, and the review text body. Due to the limit of computer computation ability, we pulled out the first 100,000 data samples and split 80% of the data into the training set and 20% of the data into the testing set. 
+
+For the Drug dataset, we downloaded from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Drug+Review+Dataset+%28Drugs.com%29). The dataset has 215,063 samples with 6 attributes, including \verb|drugName|, \verb|condition|, \verb|review|, \verb|rating| (1 to 10), \verb|date|, \verb|usefulCount|. Similar to *Amazon Review* dataset, we split the whole dataset into training (80%) and testing (20%) datasets. In order to replicate the code, we categorized the dataset into two labels, where \verb|rating|s range from [1 to 4] are categorized as [1(negative)] and the \verb|rating|s range from [7 to 10] are categorized as [2(positive)]. We combined the text columns together and removed symbols that are not a number or a word. Moreover, we only retained the columns of \verb|rating| and merged columns of \verb|review|, \verb|name|, \verb|condition| as one text body attribute. Hence our drug dataset has the same format as *Amazon Review*. 
 
 ## Dataset Prepossessing
 
+Take the code for Amazon reviews as example.
+
 ### Amazon reviews
+
+We first set seed and read the data. Note that we split the original data into training and testing according to ratio 8:2.
+
 ```{r}
 set.seed(1)
 N_amazon <- 100000
@@ -30,13 +40,18 @@ reviews_amazon <- readLines("amazon_review_polarity_csv/train.csv", n = N_amazon
 reviews_amazon <- data.frame(reviews_amazon)
 ```
 
+Then we separating the sentiment and the review text.
+
 ```{r, message=FALSE}
 library(tidyr) 
 reviews_amazon <- separate(data = reviews_amazon, col = reviews_amazon, 
                        into = c("Sentiment", "SentimentText"), sep = 4)
-# Head rows of the data:
-head(reviews_amazon)
 ```
+
+Here we got the data before prepossessing.
+
+![Head rows of the data before prepossessing](before.png){width=60%}
+Since the unnecessary punctuation may cause the problem for our sentiment analysis, we remove the punctuation with the following code:
 
 ```{r}
 # Retaining only alphanumeric values in the sentiment column
@@ -46,17 +61,21 @@ reviews_amazon$SentimentText <- gsub("[^[:alnum:] ]"," ",reviews_amazon$Sentimen
 # Replacing multiple spaces in the text with single space
 reviews_amazon$SentimentText <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", 
                                  reviews_amazon$SentimentText, perl=TRUE) 
-# Writing the output to a file that can be consumed in other projects
+# Writing the output to a file that can be consumed in other models
 write.table(reviews_amazon,file = "Sentiment Analysis Dataset.csv",row.names = F, 
             col.names = T,sep=',')
 ```
+
+This will give us the following output:
+
+![Head rows of the data after prepossessing](after.png){width=60%}
+Since The fastText algorithm expects the dataset to be in a format: "__label__<x> <text>", where x is the class name and text is the review text, we need to transform our data format as required.
 
 ```{r}
 reviews_amazon <- readLines('amazon_review_polarity_csv/train.csv', n = N_amazon)
 # Basic EDA to confirm that the data is read correctly 
 print(class(reviews_amazon)) 
 print(length(reviews_amazon)) 
-# print(head(reviews_amazon,2)) 
 # Replacing the positive sentiment value 2 with __label__2
 reviews_amazon <- gsub("\\\"2\\\",","__label__2 ",reviews_amazon) 
 # Replacing the negative sentiment value 1 with __label__1
@@ -65,21 +84,21 @@ reviews_amazon <- gsub("\\\"1\\\",","__label__1 ",reviews_amazon)
 reviews_amazon <- gsub("\\\""," ",reviews_amazon) 
 # Replacing multiple spaces in the text with single space
 reviews_amazon <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_amazon, perl=TRUE) 
-# Basic EDA post the required processing to confirm input is as desired 
-# print("EDA POST PROCESSING") 
-# print(class(reviews_amazon)) 
-# print(length(reviews_amazon)) 
-# print(head(reviews_amazon,2)) 
+
 # Writing the revamped file to the directory so we could use it with 
 # fastText sentiment analyzer project
 fileConn <- file("Sentiment Analysis Dataset_ft.txt") 
 writeLines(reviews_amazon, fileConn) 
 close(fileConn)
 ```
+This will give us the following dataset:
 
+![Head rows of the prepossessing data for FastText](FastText.png){width=60%}
 
+### Drug Review
 
-### Drug Data
+The prepossing method for Drug Review are similar to Amazon Review.
+
 ```{r, echo=FALSE}
 N_Drug <- 146942
 reviews_text_Drug <- readLines("Drug Train.csv", n = N_Drug)
@@ -105,6 +124,7 @@ reviews_text_Drug$SentimentText <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "",
                                       reviews_text_Drug$SentimentText, perl=TRUE)
 ```
 
+However we did find some problems during our training processes, which is the Drug Review are actually imbalanced. So we need to balanced our Drug Review, make them equal numbers of the positive reviews and negative reviews.
 
 ```{r}
 # Checking the summary of our label for Drug data
@@ -134,10 +154,6 @@ write.table(reviews_text_Drug,file = "Sentiment Analysis Dataset_Drug.csv",
 reviews_text_Drug <- readLines("Drug Train.csv", n = 146942)
 reviews_text_Drug <- reviews_text_Drug[-1]
 reviews_text_Drug <- reviews_text_Drug[balanceid]
-# Basic EDA to confirm that the data is read correctly 
-print(class(reviews_text_Drug)) 
-print(length(reviews_text_Drug)) 
-# print(head(reviews_text_Drug,2)) 
 # Replacing the positive sentiment value 2 with __label__2
 reviews_text_Drug<-gsub("\\\"2\\\",","__label__2 ",reviews_text_Drug) 
 # Replacing the negative sentiment value 1 with __label__1
@@ -146,11 +162,7 @@ reviews_text_Drug<-gsub("\\\"1\\\",","__label__1 ",reviews_text_Drug)
 reviews_text_Drug<-gsub("\\\""," ",reviews_text_Drug) 
 # Replacing multiple spaces in the text with single space
 reviews_text_Drug<-gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", reviews_text_Drug, perl=TRUE) 
-# Basic EDA post the required processing to confirm input is as desired 
-# print("EDA POST PROCESSING") 
-# print(class(reviews_text_Drug)) 
-# print(length(reviews_text_Drug)) 
-# print(head(reviews_text_Drug,2)) 
+
 # Writing the revamped file to the directory so we could use it with 
 # fastText sentiment analyzer project
 fileConn<-file("Sentiment Analysis Dataset_ft_Drug.txt") 
@@ -161,7 +173,7 @@ close(fileConn)
 
 
 
-# BoW approach
+# BoW approach with naive bayes
 ## Amazon reviews
 ```{r, message=FALSE}
 library(SnowballC) 
@@ -435,7 +447,7 @@ print(mmetric(nb_predicts_Drug, dtm_train_test_Drug_labels, c("ACC")))
 ```
 
 
-# Pretrained word2vec word embedding
+# Pretrained word2vec word embedding with random forest algorithm
 ## Amazon reviews
 ```{r, message=FALSE}
 library(softmaxreg) 
